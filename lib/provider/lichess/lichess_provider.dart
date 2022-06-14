@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:chess_cloud_provider/chess_cloud_provider.dart';
+import 'package:chess_cloud_provider/models/chess_color_selection.dart';
 import 'package:chess_cloud_provider/models/http_exception.dart';
 import 'package:chess_cloud_provider/models/time_option.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_account.dart';
@@ -118,13 +119,13 @@ class LichessCloudProvider extends ChessCloudProvider {
   Future<Stream<List<int>>> getSeekStream({
     bool rated = false,
     required TimeOption time,
-    String color = "random",
+    ChessColorSelection color = ChessColorSelection.random,
     List<int>? ratingRange
   }) async {
 
     Map<String, dynamic> data = {
       "rated": rated,
-      "color": color,
+      "color": color.text,
       "time": time.time.inMinutes,
       "increment": time.increment.inSeconds
     };
@@ -144,9 +145,9 @@ class LichessCloudProvider extends ChessCloudProvider {
   Future<LichessChallengeResult> createOpenChallenge({
     bool rated = false,
     TimeOption? time,
-    String color = "random"
+    ChessColorSelection color = ChessColorSelection.random,
   }) async {
-    Map<String, dynamic> data = {"rated": rated, "color": color};
+    Map<String, dynamic> data = {"rated": rated, "color": color.text};
 
     if (time != null) {
       data["clock.limit"] = time.time.inMinutes;
@@ -165,9 +166,9 @@ class LichessCloudProvider extends ChessCloudProvider {
   Future<LichessChallengeResult> createChallenge(String username, {
     bool rated = false,
     TimeOption? time,
-    String color = "random"
+    ChessColorSelection color = ChessColorSelection.random,
   }) async {
-    Map<String, dynamic> data = {"rated": rated, "color": color};
+    Map<String, dynamic> data = {"rated": rated, "color": color.text};
 
     if (time != null) {
       data["clock.limit"] = time.time.inMinutes;

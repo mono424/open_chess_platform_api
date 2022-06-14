@@ -1,7 +1,8 @@
 
+import 'package:chess_cloud_provider/models/challenge_result.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_challenge.dart';
 
-class LichessChallengeResult {
+class LichessChallengeResult extends ChallengeResult {
   late LichessChallenge challenge;
   late int socketVersion;
   late String urlWhite;
@@ -23,5 +24,10 @@ class LichessChallengeResult {
     data['urlWhite'] = urlWhite;
     data['urlBlack'] = urlBlack;
     return data;
+  }
+  
+  @override
+  String getChallengeId() {
+    return challenge.id;
   }
 }

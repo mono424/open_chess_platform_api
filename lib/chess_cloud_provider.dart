@@ -13,10 +13,12 @@ abstract class ChessCloudProvider {
     ChessColorSelection color = ChessColorSelection.random,
   });
 
-  Future<ChallengeResult> createOpenChallenge({
+  Future<ChallengeResult> seekGame({
     bool rated = false,
     TimeOption? time,
-    ChessColorSelection color = ChessColorSelection.random
+    ChessColorSelection color = ChessColorSelection.random,
   });
+
+
 
 }

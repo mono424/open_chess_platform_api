@@ -1,9 +1,12 @@
 library chess_cloud_provider;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:async/async.dart';
 import 'package:chess_cloud_provider/chess_cloud_provider.dart';
+import 'package:chess_cloud_provider/models/challenge_result.dart';
 import 'package:chess_cloud_provider/models/chess_color_selection.dart';
 import 'package:chess_cloud_provider/models/http_exception.dart';
 import 'package:chess_cloud_provider/models/time_option.dart';
@@ -100,12 +103,12 @@ class LichessCloudProvider extends ChessCloudProvider {
         .toList();
   }
 
-  Future<Stream<String>> getEventStream() async {
+  Future<Stream<LichessChallengeResult>> getEventStream() async {
     final request = await createGetRequest("/api/stream/event");
     request.headers.set('Connection', 'Keep-Alive');
     request.headers.set('Keep-Alive', 'timeout=5, max=1000');
     final response = await request.close();
-    return const LineSplitter().bind(utf8.decoder.bind(response));
+    return const LineSplitter().bind(utf8.decoder.bind(response)).map((e) => LichessChallengeResult.fromJson(jsonDecode(e)));
   }
 
   Future<Stream<String>> getGameStream(String gameId) async {
@@ -250,4 +253,26 @@ class LichessCloudProvider extends ChessCloudProvider {
     final responseJson = await parseResponseJSON(await request.close());
     return LichessGameImportResult.fromJson(responseJson);
   }
+
+  @override
+  Future<CancelableOperation<ChallengeResult>> seekGame({bool rated = false, required TimeOption time, ChessColorSelection color = ChessColorSelection.random}) async {
+    ChallengeResult? lastEvent;
+    late StreamSubscription eventListener;
+    eventListener = (await getEventStream()).listen((event) { lastEvent = event; eventListener.cancel(); });
+
+    final seekListener = (await getSeekStream(rated: rated, time: time, color: color)).listen((_) {});
+
+    return CancelableOperation.fromFuture(
+      Future(() async {
+        await seekListener.asFuture();
+        await eventListener.asFuture();
+        return lastEvent!;
+      }),
+      onCancel: () {
+        seekListener.cancel();
+        eventListener.cancel();
+      }
+    );
+  }
+
 }

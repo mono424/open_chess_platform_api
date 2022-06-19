@@ -9,3 +9,7 @@ class ChessProviderHttpException extends ChessProviderException {
   final String message;
   ChessProviderHttpException(this.response, this.message);
 }
+
+class ChessProviderNotAuthorizedException extends ChessProviderHttpException {
+  ChessProviderNotAuthorizedException(HttpClientResponse response, String message) : super(response, message);
+}

@@ -1,3 +1,5 @@
+library chess_cloud_provider;
+
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_count.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_user.dart';
 

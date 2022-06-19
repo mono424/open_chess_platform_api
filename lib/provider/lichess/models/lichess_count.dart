@@ -1,3 +1,5 @@
+library chess_cloud_provider;
+
 class LichessCount {
   late int all;
   late int rated;

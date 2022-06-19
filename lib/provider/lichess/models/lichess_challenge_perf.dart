@@ -1,3 +1,5 @@
+library chess_cloud_provider;
+
 class LichessChallengePerf {
   late String icon;
   late String name;

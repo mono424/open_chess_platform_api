@@ -1,3 +1,5 @@
+library chess_cloud_provider;
+
 class LichessPlayTime {
   late int total;
   late int tv;

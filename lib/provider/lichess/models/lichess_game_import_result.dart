@@ -1,3 +1,5 @@
+library chess_cloud_provider;
+
 class LichessGameImportResult {
   late String id;
   late String url;

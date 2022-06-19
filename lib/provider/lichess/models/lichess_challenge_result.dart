@@ -1,4 +1,6 @@
 
+library chess_cloud_provider;
+
 import 'package:chess_cloud_provider/models/challenge_result.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_challenge.dart';
 

@@ -1,3 +1,5 @@
+library chess_cloud_provider;
+
 class LichessTimeControl {
   late String type;
   late int limit;

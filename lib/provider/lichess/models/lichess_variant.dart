@@ -1,7 +1,9 @@
+library chess_cloud_provider;
+
 class LichessVariant {
   late String key;
   late String name;
-  late String short;
+  late String? short;
 
   LichessVariant({required this.key, required this.name, required this.short});
 

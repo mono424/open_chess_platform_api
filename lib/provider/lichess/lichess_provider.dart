@@ -8,8 +8,11 @@ import 'package:async/async.dart';
 import 'package:chess_cloud_provider/chess_cloud_provider.dart';
 import 'package:chess_cloud_provider/models/challenge_result.dart';
 import 'package:chess_cloud_provider/models/chess_color_selection.dart';
+import 'package:chess_cloud_provider/models/game.dart';
 import 'package:chess_cloud_provider/models/http_exception.dart';
 import 'package:chess_cloud_provider/models/time_option.dart';
+import 'package:chess_cloud_provider/provider/lichess/models/events/lichess_event.dart';
+import 'package:chess_cloud_provider/provider/lichess/models/events/lichess_event_game_started.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_account.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_challenge_result.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_game_import_result.dart';
@@ -27,7 +30,10 @@ class LichessCloudProvider extends ChessCloudProvider {
   List<int> createFormBody(Map<String, dynamic> entries) {
     String formBody = "";
     for (var entry in entries.entries) {
-      formBody += entry.key + '=' + Uri.encodeQueryComponent(entry.value);
+      formBody += entry.key + '=' + Uri.encodeQueryComponent(entry.value.toString()) + "&";
+    }
+    if (formBody != "") {
+      formBody = formBody.substring(0, formBody.length - 1);
     }
     return utf8.encode(formBody);
   }
@@ -40,6 +46,8 @@ class LichessCloudProvider extends ChessCloudProvider {
       } catch (e) {
         throw ChessProviderHttpException(response, "Failed to parse response json");
       }
+    } else if (response.statusCode == 401) {
+      throw ChessProviderNotAuthorizedException(response, "Not authorized");
     } else {
       throw ChessProviderHttpException(response, "Failed to retrieve response");
     }
@@ -52,14 +60,18 @@ class LichessCloudProvider extends ChessCloudProvider {
     return request;
   }
   
-  Future<HttpClientRequest> createPostRequest(path, { String? contentType = "application/json" }) async {
+  Future<HttpClientRequest> createPostRequest(path, { String? contentType = "application/json", List<int>? body }) async {
     HttpClientRequest request = await httpClient.postUrl(Uri.parse(options.lichessUrl + path));
     request.headers.set('Authorization', "Bearer ${options.token}");
     if (contentType != null) request.headers.set('Content-Type', contentType);
+    if (body != null) {
+      // request.headers.set('content-length', body.length);
+      request.write(body);
+    }
     return request;
   }
 
-  Future<void> refreshToken() async {
+  Future<String> refreshToken() async {
     final request = await httpClient.postUrl(Uri.parse(options.tokenRefreshUrl));
     request.headers.set('Content-Type', 'application/json');
     request.headers.set('Accept', 'text/plain;charset=UTF-8');
@@ -76,6 +88,7 @@ class LichessCloudProvider extends ChessCloudProvider {
       try {
         final newToken = await response.transform(utf8.decoder).join();
         options.token = newToken;
+        return newToken;
       } catch (e) {
         throw ChessProviderHttpException(response, "Cannot parse new token");
       }
@@ -103,12 +116,16 @@ class LichessCloudProvider extends ChessCloudProvider {
         .toList();
   }
 
-  Future<Stream<LichessChallengeResult>> getEventStream() async {
+  @override
+  Future<Stream<LichessEvent>> listenForEvents() async {
     final request = await createGetRequest("/api/stream/event");
     request.headers.set('Connection', 'Keep-Alive');
     request.headers.set('Keep-Alive', 'timeout=5, max=1000');
     final response = await request.close();
-    return const LineSplitter().bind(utf8.decoder.bind(response)).map((e) => LichessChallengeResult.fromJson(jsonDecode(e)));
+    return const LineSplitter().bind(utf8.decoder.bind(response)).map<LichessEvent?>((e) {
+      if (e == "") return null;
+      return LichessEvent.parseJson(jsonDecode(e));
+    }).where((e) => e != null).map((e) => e!);
   }
 
   Future<Stream<String>> getGameStream(String gameId) async {
@@ -137,14 +154,12 @@ class LichessCloudProvider extends ChessCloudProvider {
       data["ratingRange"] = ratingRange.join("-");
     }
 
-    final request = await createPostRequest("/api/board/seek", contentType: "application/x-www-form-urlencoded");
     final body = createFormBody(data);
-    request.headers.contentLength = body.length;
-    request.write(body);
+    final request = await createPostRequest("/api/board/seek", contentType: "application/x-www-form-urlencoded", body: body);
 
     return request.close();
   }
-
+  
   Future<LichessChallengeResult> createOpenChallenge({
     bool rated = false,
     TimeOption? time,
@@ -157,15 +172,14 @@ class LichessCloudProvider extends ChessCloudProvider {
       data["clock.increment"] = time.increment.inSeconds;
     }
 
-    final request = await createPostRequest("/api/challenge/open");
     final body = createFormBody(data);
-    request.headers.contentLength = body.length;
-    request.write(body);
+    final request = await createPostRequest("/api/challenge/open", body: body);
 
     final responseJson = await parseResponseJSON(await request.close());
     return LichessChallengeResult.fromJson(responseJson);
   }
 
+  @override
   Future<LichessChallengeResult> createChallenge(String username, {
     bool rated = false,
     TimeOption? time,
@@ -178,31 +192,24 @@ class LichessCloudProvider extends ChessCloudProvider {
       data["clock.increment"] = time.increment.inSeconds;
     }
 
-    final request = await createPostRequest("/api/challenge/$username");
     final body = createFormBody(data);
-    request.headers.contentLength = body.length;
-    request.write(body);
+    final request = await createPostRequest("/api/challenge/$username", body: body);
 
     final responseJson = await parseResponseJSON(await request.close());
     return LichessChallengeResult.fromJson(responseJson);
   }
 
   Future<bool> makeMove(String gameId, {String uciMove = "", bool offerDraw = false}) async {
-    final request = await createPostRequest("/api/board/game/$gameId/move/$uciMove");
-
     final body = createFormBody({"offeringDraw": offerDraw});
-    request.headers.contentLength = body.length;
-    request.write(body);
+    final request = await createPostRequest("/api/board/game/$gameId/move/$uciMove", body: body);
 
     final responseJson = await parseResponseJSON(await request.close());
     return responseJson["ok"];
   }
 
   Future<bool> writeInChat(String gameId, String text, { String room = "player" }) async {
-    final request = await createPostRequest("/api/board/game/$gameId/chat", contentType: "application/x-www-form-urlencoded");
     final body = createFormBody({"room": room, "text": text});
-    request.headers.contentLength = body.length;
-    request.write(body);
+    final request = await createPostRequest("/api/board/game/$gameId/chat", contentType: "application/x-www-form-urlencoded", body: body);
 
     final responseJson = await parseResponseJSON(await request.close());
     return responseJson["ok"];
@@ -245,20 +252,23 @@ class LichessCloudProvider extends ChessCloudProvider {
   }
 
   Future<LichessGameImportResult> import(String pgn) async {
-    final request = await createPostRequest("/api/import", contentType: "application/x-www-form-urlencoded");
     final body = createFormBody({ "pgn": pgn });
-    request.headers.contentLength = body.length;
-    request.write(body);
+    final request = await createPostRequest("/api/import", contentType: "application/x-www-form-urlencoded", body: body);
 
     final responseJson = await parseResponseJSON(await request.close());
     return LichessGameImportResult.fromJson(responseJson);
   }
 
   @override
-  Future<CancelableOperation<ChallengeResult>> seekGame({bool rated = false, required TimeOption time, ChessColorSelection color = ChessColorSelection.random}) async {
-    ChallengeResult? lastEvent;
+  Future<CancelableOperation<GameResult>> seekGame({bool rated = false, required TimeOption time, ChessColorSelection color = ChessColorSelection.random}) async {
+    LichessEventGameStarted? lastEvent;
     late StreamSubscription eventListener;
-    eventListener = (await getEventStream()).listen((event) { lastEvent = event; eventListener.cancel(); });
+    eventListener = (await listenForEvents()).listen((e) {
+      if (e is LichessEventGameStarted) {
+        lastEvent = e;
+        eventListener.cancel();
+      }
+    });
 
     final seekListener = (await getSeekStream(rated: rated, time: time, color: color)).listen((_) {});
 
@@ -266,7 +276,7 @@ class LichessCloudProvider extends ChessCloudProvider {
       Future(() async {
         await seekListener.asFuture();
         await eventListener.asFuture();
-        return lastEvent!;
+        return lastEvent!.game;
       }),
       onCancel: () {
         seekListener.cancel();

@@ -1,3 +1,5 @@
+library chess_cloud_provider;
+
 class LichessChallengParticipant {
   late String id;
   late String name;

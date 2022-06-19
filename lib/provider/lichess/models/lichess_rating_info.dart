@@ -1,3 +1,5 @@
+library chess_cloud_provider;
+
 class LichessRatingInfo {
   late int games;
   late int rating;

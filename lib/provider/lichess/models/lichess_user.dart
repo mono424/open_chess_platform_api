@@ -1,3 +1,5 @@
+library chess_cloud_provider;
+
 import 'package:chess_cloud_provider/models/game_time_type.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_user_ratings.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_playtime.dart';

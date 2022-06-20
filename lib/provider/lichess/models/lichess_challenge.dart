@@ -1,7 +1,7 @@
 library chess_cloud_provider;
 
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_challeng_participant.dart';
-import 'package:chess_cloud_provider/provider/lichess/models/lichess_challenge_perf.dart';
+import 'package:chess_cloud_provider/provider/lichess/models/lichess_perf.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_time_control.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_variant.dart';
 
@@ -16,7 +16,7 @@ class LichessChallenge {
   late String speed;
   late LichessTimeControl timeControl;
   late String color;
-  late LichessChallengePerf perf;
+  late LichessPerf perf;
 
   LichessChallenge({
     required this.id,
@@ -43,7 +43,7 @@ class LichessChallenge {
     speed = json['speed'];
     timeControl = LichessTimeControl.fromJson(json['timeControl']);
     color = json['color'];
-    perf = LichessChallengePerf.fromJson(json['perf']);
+    perf = LichessPerf.fromJson(json['perf']);
   }
 
   Map<String, dynamic> toJson() {

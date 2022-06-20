@@ -1,12 +1,12 @@
 library chess_cloud_provider;
 
-class LichessChallengePerf {
-  late String icon;
+class LichessPerf {
+  late String? icon;
   late String name;
 
-  LichessChallengePerf({required this.icon, required this.name});
+  LichessPerf({this.icon, required this.name});
 
-  LichessChallengePerf.fromJson(Map<String, dynamic> json) {
+  LichessPerf.fromJson(Map<String, dynamic> json) {
     icon = json['icon'];
     name = json['name'];
   }

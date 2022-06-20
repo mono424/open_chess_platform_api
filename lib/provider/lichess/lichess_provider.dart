@@ -6,13 +6,13 @@ import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:chess_cloud_provider/chess_cloud_provider.dart';
-import 'package:chess_cloud_provider/models/challenge_result.dart';
 import 'package:chess_cloud_provider/models/chess_color_selection.dart';
 import 'package:chess_cloud_provider/models/game.dart';
 import 'package:chess_cloud_provider/models/http_exception.dart';
 import 'package:chess_cloud_provider/models/time_option.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/events/lichess_event.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/events/lichess_event_game_started.dart';
+import 'package:chess_cloud_provider/provider/lichess/models/game-events/lichess_game_event.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_account.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_challenge_result.dart';
 import 'package:chess_cloud_provider/provider/lichess/models/lichess_game_import_result.dart';
@@ -56,17 +56,17 @@ class LichessCloudProvider extends ChessCloudProvider {
   Future<HttpClientRequest> createGetRequest(path) async {
     HttpClientRequest request = await httpClient.getUrl(Uri.parse(options.lichessUrl + path));
     request.headers.set('Authorization', "Bearer ${options.token}");
-    request.headers.set('Content-Type', 'application/json');
+    request.headers.contentType = ContentType("application", "json", charset: "utf-8");
     return request;
   }
   
-  Future<HttpClientRequest> createPostRequest(path, { String? contentType = "application/json", List<int>? body }) async {
+  Future<HttpClientRequest> createPostRequest(path, { ContentType? contentType, List<int>? body }) async {
     HttpClientRequest request = await httpClient.postUrl(Uri.parse(options.lichessUrl + path));
     request.headers.set('Authorization', "Bearer ${options.token}");
-    if (contentType != null) request.headers.set('Content-Type', contentType);
+    if (contentType != null) request.headers.contentType = contentType;
     if (body != null) {
-      // request.headers.set('content-length', body.length);
-      request.write(body);
+      request.headers.set('Content-Length', body.length.toString());
+      request.add(body);
     }
     return request;
   }
@@ -122,18 +122,15 @@ class LichessCloudProvider extends ChessCloudProvider {
     request.headers.set('Connection', 'Keep-Alive');
     request.headers.set('Keep-Alive', 'timeout=5, max=1000');
     final response = await request.close();
-    return const LineSplitter().bind(utf8.decoder.bind(response)).map<LichessEvent?>((e) {
-      if (e == "") return null;
-      return LichessEvent.parseJson(jsonDecode(e));
-    }).where((e) => e != null).map((e) => e!);
+    return const LineSplitter().bind(utf8.decoder.bind(response)).where((e) => e != "").map((e) => LichessEvent.parseJson(jsonDecode(e)));
   }
 
-  Future<Stream<String>> getGameStream(String gameId) async {
+  Future<Stream<LichessGameEvent>> getGameStream(String gameId) async {
     final request = await createGetRequest("/api/board/game/stream/$gameId");
     request.headers.set('Connection', 'Keep-Alive');
     request.headers.set('Keep-Alive', 'timeout=5, max=1000');
     final response = await request.close();
-    return const LineSplitter().bind(utf8.decoder.bind(response));
+    return const LineSplitter().bind(utf8.decoder.bind(response)).where((e) => e != "").map((e) => LichessGameEvent.parseJson(jsonDecode(e)));
   }
 
   Future<Stream<List<int>>> getSeekStream({
@@ -155,7 +152,7 @@ class LichessCloudProvider extends ChessCloudProvider {
     }
 
     final body = createFormBody(data);
-    final request = await createPostRequest("/api/board/seek", contentType: "application/x-www-form-urlencoded", body: body);
+    final request = await createPostRequest("/api/board/seek", contentType: ContentType("application", "x-www-form-urlencoded", charset: "utf-8"), body: body);
 
     return request.close();
   }
@@ -173,7 +170,7 @@ class LichessCloudProvider extends ChessCloudProvider {
     }
 
     final body = createFormBody(data);
-    final request = await createPostRequest("/api/challenge/open", body: body);
+    final request = await createPostRequest("/api/challenge/open", contentType: ContentType("application", "x-www-form-urlencoded", charset: "utf-8"), body: body);
 
     final responseJson = await parseResponseJSON(await request.close());
     return LichessChallengeResult.fromJson(responseJson);
@@ -193,7 +190,7 @@ class LichessCloudProvider extends ChessCloudProvider {
     }
 
     final body = createFormBody(data);
-    final request = await createPostRequest("/api/challenge/$username", body: body);
+    final request = await createPostRequest("/api/challenge/$username", contentType: ContentType("application", "x-www-form-urlencoded", charset: "utf-8"), body: body);
 
     final responseJson = await parseResponseJSON(await request.close());
     return LichessChallengeResult.fromJson(responseJson);
@@ -201,7 +198,7 @@ class LichessCloudProvider extends ChessCloudProvider {
 
   Future<bool> makeMove(String gameId, {String uciMove = "", bool offerDraw = false}) async {
     final body = createFormBody({"offeringDraw": offerDraw});
-    final request = await createPostRequest("/api/board/game/$gameId/move/$uciMove", body: body);
+    final request = await createPostRequest("/api/board/game/$gameId/move/$uciMove", contentType: ContentType("application", "json", charset: "utf-8"), body: body);
 
     final responseJson = await parseResponseJSON(await request.close());
     return responseJson["ok"];
@@ -209,7 +206,7 @@ class LichessCloudProvider extends ChessCloudProvider {
 
   Future<bool> writeInChat(String gameId, String text, { String room = "player" }) async {
     final body = createFormBody({"room": room, "text": text});
-    final request = await createPostRequest("/api/board/game/$gameId/chat", contentType: "application/x-www-form-urlencoded", body: body);
+    final request = await createPostRequest("/api/board/game/$gameId/chat", contentType: ContentType("application", "x-www-form-urlencoded", charset: "utf-8"), body: body);
 
     final responseJson = await parseResponseJSON(await request.close());
     return responseJson["ok"];
@@ -253,7 +250,7 @@ class LichessCloudProvider extends ChessCloudProvider {
 
   Future<LichessGameImportResult> import(String pgn) async {
     final body = createFormBody({ "pgn": pgn });
-    final request = await createPostRequest("/api/import", contentType: "application/x-www-form-urlencoded", body: body);
+    final request = await createPostRequest("/api/import", contentType: ContentType("application", "x-www-form-urlencoded", charset: "utf-8"), body: body);
 
     final responseJson = await parseResponseJSON(await request.close());
     return LichessGameImportResult.fromJson(responseJson);

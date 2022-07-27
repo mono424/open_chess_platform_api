@@ -53,6 +53,27 @@ class LichessCloudProvider extends ChessCloudProvider {
     }
   }
 
+  Future<String> getResponseText(HttpClientResponse response) async {
+    final responseText = await response.transform(utf8.decoder).join();
+    if (response.statusCode == 200) {
+      return responseText;
+    }
+    
+    String errorDescription;
+    try {
+      final json = jsonDecode(responseText);
+      errorDescription = json["error"];
+    } catch (e) {
+      errorDescription = "Failed to parse response json";
+    }
+
+    if (response.statusCode == 401) {
+      throw ChessProviderNotAuthorizedException(response, errorDescription);
+    } else {
+      throw ChessProviderHttpException(response, errorDescription);
+    }
+  }
+
   Future<HttpClientRequest> createGetRequest(path) async {
     HttpClientRequest request = await httpClient.getUrl(Uri.parse(options.lichessUrl + path));
     request.headers.set('Authorization', "Bearer ${options.token}");
@@ -107,7 +128,7 @@ class LichessCloudProvider extends ChessCloudProvider {
   Future<List<LichessUser>> getFollowing(String username) async {
     final request = await createGetRequest("/api/rel/following");
     final response = await request.close();
-    final responseText = await response.transform(utf8.decoder).join();
+    final responseText = await getResponseText(response);
 
     return responseText
         .split("\n")

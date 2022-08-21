@@ -12,7 +12,7 @@ import 'package:chess_cloud_provider/provider/lichess/models/lichess_variant.dar
 class LichessGameEventGameFull extends LichessGameEvent {
   late final String id;
   late final LichessVariant variant;
-  late final LichessClock clock;
+  late final LichessClock? clock;
   late final String speed;
   late final LichessPerf perf;
   late final bool rated;
@@ -25,7 +25,7 @@ class LichessGameEventGameFull extends LichessGameEvent {
   LichessGameEventGameFull.fromJson(Map<String, dynamic> json) : super.fromJson(json) {
     id = json["id"];
     variant = LichessVariant.fromJson(json['variant']);
-    clock = LichessClock.fromJson(json['clock']);
+    if (json['clock'] != null) clock = LichessClock.fromJson(json['clock']);
     speed = json['speed'];
     perf = LichessPerf.fromJson(json['perf']);
     rated = json['rated'];
@@ -41,7 +41,7 @@ class LichessGameEventGameFull extends LichessGameEvent {
     Map<String, dynamic> map = super.toJson();
     map['id'] = id;
     map['variant'] = variant.toJson();
-    map['clock'] = clock.toJson();
+    if (clock != null) map['clock'] = clock!.toJson();
     map['speed'] = speed;
     map['perf'] = perf.toJson();
     map['rated'] = rated;

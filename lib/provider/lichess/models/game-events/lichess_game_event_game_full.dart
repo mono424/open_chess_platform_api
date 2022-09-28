@@ -22,7 +22,8 @@ class LichessGameEventGameFull extends LichessGameEvent {
   late final String initialFen;
   late final GameEventState state;
 
-  LichessGameEventGameFull.fromJson(Map<String, dynamic> json) : super.fromJson(json) {
+  LichessGameEventGameFull.fromJson(Map<String, dynamic> json)
+      : super.fromJson(json) {
     id = json["id"];
     variant = LichessVariant.fromJson(json['variant']);
     if (json['clock'] != null) clock = LichessClock.fromJson(json['clock']);
@@ -53,5 +54,4 @@ class LichessGameEventGameFull extends LichessGameEvent {
     map['state'] = state.toJson();
     return map;
   }
-
 }

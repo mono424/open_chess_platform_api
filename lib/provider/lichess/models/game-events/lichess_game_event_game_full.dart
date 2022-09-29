@@ -28,13 +28,13 @@ class LichessGameEventGameFull extends LichessGameEvent {
     variant = LichessVariant.fromJson(json['variant']);
     if (json['clock'] != null) clock = LichessClock.fromJson(json['clock']);
     speed = json['speed'];
-    perf = LichessPerf.fromJson(json['perf']);
+    if (json['perf'] != null) perf = LichessPerf.fromJson(json['perf']);
     rated = json['rated'];
     createdAt = json['createdAt'];
-    white = GameEventPlayer.fromJson(json['white']);
-    black = GameEventPlayer.fromJson(json['black']);
+    if (json['white'] != null) white = GameEventPlayer.fromJson(json['white']);
+    if (json['black'] != null) black = GameEventPlayer.fromJson(json['black']);
     initialFen = json['initialFen'];
-    state = GameEventState.fromJson(json['state']);
+    if (json['state'] != null) state = GameEventState.fromJson(json['state']);
   }
 
   @override

@@ -25,6 +25,48 @@ import 'package:open_chess_platform_api/platforms/lichess/models/lichess_game_im
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_options.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_user.dart';
 
+export 'package:open_chess_platform_api/exceptions/chess_platform_credentials_invalid.dart';
+export 'package:open_chess_platform_api/exceptions/chess_platform_credentials_unsupported.dart';
+export 'package:open_chess_platform_api/exceptions/chess_platform_http_exception.dart';
+
+export 'package:open_chess_platform_api/models/challenge_result.dart';
+export 'package:open_chess_platform_api/models/chess_color_selection.dart';
+export 'package:open_chess_platform_api/models/game.dart';
+export 'package:open_chess_platform_api/models/game_time_type.dart';
+export 'package:open_chess_platform_api/models/platform_event.dart';
+export 'package:open_chess_platform_api/models/time_option.dart';
+
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_account.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_challeng_participant.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_challenge.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_challenge_result.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_clock.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_compat.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_count.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_game.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_game_event_player.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_game_event_state.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_game_import_result.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_opponent.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_options.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_perf.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_playtime.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_rating_info.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_time_control.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_user.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_user_ratings.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_variant.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge_canceled.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge_declined.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_game_finish.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_game_started.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event_chat_line.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event_game_full.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event_game_state.dart';
+
 class Lichess extends ChessPlatform {
   final LichessOptions options;
   final HttpClient httpClient = HttpClient();
@@ -37,7 +79,8 @@ class Lichess extends ChessPlatform {
             name: "Lichess",
             description:
                 "Lichess is a free (really), libre, no-ads, open source chess server.",
-            logo: AssetImage("lib/platforms/lichess/assets/logo.png"))) {
+            logo: AssetImage("assets/lichess.png",
+                package: "open_chess_platform_api"))) {
     httpClient.connectionTimeout = options.connectionTimeout;
   }
 
@@ -236,7 +279,7 @@ class Lichess extends ChessPlatform {
 
   @override
   Future<LichessChallengeResult> createChallenge(
-    String username, {
+    String userId, {
     bool rated = false,
     TimeOption? time,
     ChessColorSelection color = ChessColorSelection.random,
@@ -249,7 +292,7 @@ class Lichess extends ChessPlatform {
     }
 
     final body = createFormBody(data);
-    final request = await createPostRequest("/api/challenge/$username",
+    final request = await createPostRequest("/api/challenge/$userId",
         contentType: ContentType("application", "x-www-form-urlencoded",
             charset: "utf-8"),
         body: body);
@@ -395,5 +438,11 @@ class Lichess extends ChessPlatform {
   @override
   bool hasAuth() {
     return token != null;
+  }
+
+  @override
+  Future<void> deauthenticate() async {
+    token = null;
+    account = null;
   }
 }

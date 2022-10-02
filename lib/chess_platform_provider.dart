@@ -22,14 +22,18 @@ abstract class ChessPlatform {
   /// Returns wether the user is currently authenticated or not.
   bool hasAuth();
 
+  /// Authenticate a user with his credentials.
   Future<void> authenticate(ChessPlatformCredentials credentials);
+
+  /// Deauthenticate the current user.
+  Future<void> deauthenticate();
 
   // Gets friend list filtered by the query.
   Future<List<ChessPlatformUser>> getFriend(String query);
 
   // Challenge an other user.
   Future<ChallengeResult> createChallenge(
-    String username, {
+    String userId, {
     bool rated = false,
     TimeOption time,
     ChessColorSelection color = ChessColorSelection.random,

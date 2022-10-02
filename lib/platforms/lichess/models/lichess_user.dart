@@ -85,8 +85,8 @@ class LichessUser extends ChessPlatformUser {
   String get displayName => username;
 
   @override
-  ImageProvider<Object> get imageSrc =>
-      const AssetImage("lib/platforms/lichess/assets/logo.png");
+  ImageProvider<Object> get imageSrc => const AssetImage("assets/lichess.png",
+      package: "open_chess_platform_api");
 
   @override
   String get id => userId;

@@ -1,4 +1,4 @@
-library chess_cloud_provider;
+library open_chess_platform_api;
 
 enum ChessColorSelection {
   random,
@@ -7,7 +7,6 @@ enum ChessColorSelection {
 }
 
 extension ChessColorSelectionExtension on ChessColorSelection {
-
   String get text {
     switch (this) {
       case ChessColorSelection.white:
@@ -18,5 +17,4 @@ extension ChessColorSelectionExtension on ChessColorSelection {
         return "random";
     }
   }
-
 }

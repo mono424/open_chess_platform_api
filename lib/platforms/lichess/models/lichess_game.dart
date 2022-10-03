@@ -1,9 +1,12 @@
-import 'package:open_chess_platform_api/models/game.dart';
+import 'package:open_chess_platform_api/chess_platform_game.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_compat.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_opponent.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_variant.dart';
 
-class LichessGame extends GameResult {
+class LichessGame extends ChessPlatformGame {
+  @override
+  late final String id;
+
   late final String fullId;
   late final String gameId;
   late final String fen;
@@ -18,7 +21,6 @@ class LichessGame extends GameResult {
   late final LichessOpponent opponent;
   late final bool isMyTurn;
   late final LichessCompat compat;
-  late final String id;
 
   LichessGame(
       {required this.fullId,
@@ -73,10 +75,5 @@ class LichessGame extends GameResult {
     data['compat'] = compat.toJson();
     data['id'] = id;
     return data;
-  }
-
-  @override
-  String getGameId() {
-    return gameId;
   }
 }

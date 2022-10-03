@@ -1,12 +1,15 @@
 library open_chess_platform_api;
 
+import 'package:open_chess_platform_api/chess_platform_challenge.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_challeng_participant.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_perf.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_time_control.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_variant.dart';
 
-class LichessChallenge {
+class LichessChallenge extends ChessPlatformChallenge {
+  @override
   late String id;
+
   late String url;
   late String status;
   late LichessChallengParticipant challenger;

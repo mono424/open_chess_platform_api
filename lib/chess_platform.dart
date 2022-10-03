@@ -2,10 +2,11 @@ library open_chess_platform_api;
 
 import 'package:async/async.dart';
 import 'package:open_chess_platform_api/chess_platform_credentials.dart';
+import 'package:open_chess_platform_api/chess_platform_game.dart';
+import 'package:open_chess_platform_api/chess_platform_state.dart';
 import 'package:open_chess_platform_api/chess_platform_user.dart';
 import 'package:open_chess_platform_api/models/challenge_result.dart';
 import 'package:open_chess_platform_api/models/chess_color_selection.dart';
-import 'package:open_chess_platform_api/models/game.dart';
 import 'package:open_chess_platform_api/models/platform_event.dart';
 import 'package:open_chess_platform_api/chess_platform_meta.dart';
 import 'package:open_chess_platform_api/models/time_option.dart';
@@ -17,6 +18,10 @@ abstract class ChessPlatform {
   /// Initializes a new ChessPlatform with specified [meta] data.
   ChessPlatform(this.meta);
 
+  /// Returns an auto managed state
+  ChessPlatformState getState();
+
+  /// Event Stream for platform related events.
   Future<Stream<PlatformEvent>> listenForEvents();
 
   /// Returns wether the user is currently authenticated or not.
@@ -40,7 +45,7 @@ abstract class ChessPlatform {
   });
 
   // Seeks a random oppoent and starts a new game
-  Future<CancelableOperation<GameResult>> seekGame({
+  Future<CancelableOperation<ChessPlatformGame>> seekGame({
     bool rated = false,
     required TimeOption time,
     ChessColorSelection color = ChessColorSelection.random,

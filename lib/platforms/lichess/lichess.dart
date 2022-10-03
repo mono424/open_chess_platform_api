@@ -6,21 +6,29 @@ import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:flutter/widgets.dart';
+import 'package:open_chess_platform_api/chess_platform_challenge.dart';
 import 'package:open_chess_platform_api/chess_platform_credentials.dart';
+import 'package:open_chess_platform_api/chess_platform_game.dart';
 import 'package:open_chess_platform_api/chess_platform_meta.dart';
-import 'package:open_chess_platform_api/chess_platform_provider.dart';
+import 'package:open_chess_platform_api/chess_platform.dart';
+import 'package:open_chess_platform_api/chess_platform_state.dart';
 import 'package:open_chess_platform_api/chess_platform_user.dart';
 import 'package:open_chess_platform_api/exceptions/chess_platform_credentials_invalid.dart';
 import 'package:open_chess_platform_api/exceptions/chess_platform_credentials_unsupported.dart';
 import 'package:open_chess_platform_api/exceptions/chess_platform_http_exception.dart';
 import 'package:open_chess_platform_api/models/chess_color_selection.dart';
-import 'package:open_chess_platform_api/models/game.dart';
 import 'package:open_chess_platform_api/models/time_option.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge_canceled.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge_declined.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_game_finish.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_game_started.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_account.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_challenge.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_challenge_result.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_game.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_game_import_result.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_options.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_user.dart';
@@ -31,7 +39,6 @@ export 'package:open_chess_platform_api/exceptions/chess_platform_http_exception
 
 export 'package:open_chess_platform_api/models/challenge_result.dart';
 export 'package:open_chess_platform_api/models/chess_color_selection.dart';
-export 'package:open_chess_platform_api/models/game.dart';
 export 'package:open_chess_platform_api/models/game_time_type.dart';
 export 'package:open_chess_platform_api/models/platform_event.dart';
 export 'package:open_chess_platform_api/models/time_option.dart';
@@ -71,8 +78,23 @@ class Lichess extends ChessPlatform {
   final LichessOptions options;
   final HttpClient httpClient = HttpClient();
 
+  // Handles the outstream.
+  final StreamController<LichessEvent> _outStreamController =
+      StreamController();
+  late final Stream<LichessEvent> outStream =
+      _outStreamController.stream.asBroadcastStream();
+
+  // Managed State
+  late final ChessPlatformStateController _stateController =
+      ChessPlatformStateController<LichessUser, LichessGame, LichessChallenge>(
+          ChessPlatformState());
+
+  // Authentication
   String? token;
-  LichessAccount? account;
+
+  // Original EventStream from lichess.
+  Stream<LichessEvent>? _eventStream;
+  StreamSubscription<LichessEvent>? _eventStreamSub;
 
   Lichess(this.options)
       : super(const ChessPlatformMeta(
@@ -82,82 +104,43 @@ class Lichess extends ChessPlatform {
             logo: AssetImage("assets/lichess.png",
                 package: "open_chess_platform_api"))) {
     httpClient.connectionTimeout = options.connectionTimeout;
+    httpClient.idleTimeout = options.idleTimeout;
   }
 
-  List<int> createFormBody(Map<String, dynamic> entries) {
-    String formBody = "";
-    for (var entry in entries.entries) {
-      formBody += entry.key +
-          '=' +
-          Uri.encodeQueryComponent(entry.value.toString()) +
-          "&";
-    }
-    if (formBody != "") {
-      formBody = formBody.substring(0, formBody.length - 1);
-    }
-    return utf8.encode(formBody);
-  }
+  //        d8888          888    888
+  //       d88888          888    888
+  //      d88P888          888    888
+  //     d88P 888 888  888 888888 88888b.
+  //    d88P  888 888  888 888    888 "88b
+  //   d88P   888 888  888 888    888  888
+  //  d8888888888 Y88b 888 Y88b.  888  888
+  // d88P     888  "Y88888  "Y888 888  888
 
-  Future<Map<String, dynamic>> parseResponseJSON(
-      HttpClientResponse response) async {
-    if (response.statusCode == 200) {
+  @override
+  Future<void> authenticate(ChessPlatformCredentials credentials) async {
+    if (credentials is ChessPlatformCredentialsToken) {
+      token = credentials.token;
       try {
-        final text = await response.transform(utf8.decoder).join();
-        return jsonDecode(text);
+        _stateController.setUser(await getAccount());
+        await setupState();
       } catch (e) {
-        throw ChessPlatformHttpException(
-            response, "Failed to parse response json");
+        throw ChessPlatformCredentialsInvalid();
       }
-    } else if (response.statusCode == 401) {
-      throw ChessPlatformNotAuthorizedException(response, "Not authorized");
     } else {
-      throw ChessPlatformHttpException(response, "Failed to retrieve response");
+      throw ChessPlatformCredentialsUnsupported();
     }
   }
 
-  Future<String> getResponseText(HttpClientResponse response) async {
-    final responseText = await response.transform(utf8.decoder).join();
-    if (response.statusCode == 200) {
-      return responseText;
-    }
-
-    String errorDescription;
-    try {
-      final json = jsonDecode(responseText);
-      errorDescription = json["error"];
-    } catch (e) {
-      errorDescription = "Failed to parse response json";
-    }
-
-    if (response.statusCode == 401) {
-      throw ChessPlatformNotAuthorizedException(response, errorDescription);
-    } else {
-      throw ChessPlatformHttpException(response, errorDescription);
-    }
+  @override
+  bool hasAuth() {
+    return token != null;
   }
 
-  Future<HttpClientRequest> createGetRequest(path) async {
-    HttpClientRequest request =
-        await httpClient.getUrl(Uri.parse(options.lichessUrl + path));
-    if (token != null) {
-      request.headers.set('Authorization', "Bearer $token");
-    }
-    request.headers.contentType =
-        ContentType("application", "json", charset: "utf-8");
-    return request;
-  }
-
-  Future<HttpClientRequest> createPostRequest(path,
-      {ContentType? contentType, List<int>? body}) async {
-    HttpClientRequest request =
-        await httpClient.postUrl(Uri.parse(options.lichessUrl + path));
-    request.headers.set('Authorization', "Bearer $token");
-    if (contentType != null) request.headers.contentType = contentType;
-    if (body != null) {
-      request.headers.set('Content-Length', body.length.toString());
-      request.add(body);
-    }
-    return request;
+  @override
+  Future<void> deauthenticate() async {
+    token = null;
+    _stateController.setUser(null);
+    disposeState();
   }
 
   Future<String> refreshToken() async {
@@ -188,6 +171,15 @@ class Lichess extends ChessPlatform {
     }
   }
 
+  //        d8888 8888888b. 8888888
+  //       d88888 888   Y88b  888
+  //      d88P888 888    888  888
+  //     d88P 888 888   d88P  888
+  //    d88P  888 8888888P"   888
+  //   d88P   888 888         888
+  //  d8888888888 888         888
+  // d88P     888 888       8888888
+
   Future<LichessAccount> getAccount() async {
     final request = await createGetRequest("/api/account");
     final response = await request.close();
@@ -207,8 +199,7 @@ class Lichess extends ChessPlatform {
         .toList();
   }
 
-  @override
-  Future<Stream<LichessEvent>> listenForEvents() async {
+  Future<Stream<LichessEvent>> openEventStream() async {
     final request = await createGetRequest("/api/stream/event");
     request.headers.set('Connection', 'Keep-Alive');
     request.headers.set('Keep-Alive', 'timeout=5, max=1000');
@@ -217,6 +208,11 @@ class Lichess extends ChessPlatform {
         .bind(utf8.decoder.bind(response))
         .where((e) => e != "")
         .map((e) => LichessEvent.parseJson(jsonDecode(e)));
+  }
+
+  @override
+  Future<Stream<LichessEvent>> listenForEvents() async {
+    return outStream;
   }
 
   Future<Stream<LichessGameEvent>> getGameStream(String gameId) async {
@@ -383,7 +379,7 @@ class Lichess extends ChessPlatform {
   }
 
   @override
-  Future<CancelableOperation<GameResult>> seekGame(
+  Future<CancelableOperation<ChessPlatformGame>> seekGame(
       {bool rated = false,
       required TimeOption time,
       ChessColorSelection color = ChessColorSelection.random}) async {
@@ -411,20 +407,6 @@ class Lichess extends ChessPlatform {
   }
 
   @override
-  Future<void> authenticate(ChessPlatformCredentials credentials) async {
-    if (credentials is ChessPlatformCredentialsToken) {
-      token = credentials.token;
-      try {
-        account = await getAccount();
-      } catch (e) {
-        throw ChessPlatformCredentialsInvalid();
-      }
-    } else {
-      throw ChessPlatformCredentialsUnsupported();
-    }
-  }
-
-  @override
   Future<List<ChessPlatformUser>> getFriend(String query) async {
     List<ChessPlatformUser> result = [];
     for (var res in (await getFollowing())) {
@@ -435,14 +417,141 @@ class Lichess extends ChessPlatform {
     return result;
   }
 
-  @override
-  bool hasAuth() {
-    return token != null;
-  }
+  //   .d8888b. 88888888888     d8888 88888888888 8888888888
+  // d88P  Y88b    888        d88888     888     888
+  // Y88b.         888       d88P888     888     888
+  //  "Y888b.      888      d88P 888     888     8888888
+  //     "Y88b.    888     d88P  888     888     888
+  //       "888    888    d88P   888     888     888
+  // Y88b  d88P    888   d8888888888     888     888
+  //  "Y8888P"     888  d88P     888     888     8888888888
 
   @override
-  Future<void> deauthenticate() async {
-    token = null;
-    account = null;
+  ChessPlatformState<ChessPlatformUser, ChessPlatformGame,
+      ChessPlatformChallenge> getState() {
+    return _stateController.state;
+  }
+
+  void disposeState() {
+    if (_eventStreamSub != null) {
+      _eventStreamSub!.cancel();
+      _eventStream = null;
+      _eventStreamSub = null;
+    }
+  }
+
+  Future<void> setupState() async {
+    disposeState();
+    _eventStream = await openEventStream();
+    _eventStreamSub = _eventStream!.listen(handleEvent);
+  }
+
+  void handleEvent(LichessEvent event) {
+    _outStreamController.add(event);
+
+    if (event is LichessEventGameStarted) {
+      _stateController.addRunningGame(event.game);
+    }
+
+    if (event is LichessEventGameFinish) {
+      _stateController.removeRunningGame(event.game.id);
+    }
+
+    if (event is LichessEventChallenge) {
+      _stateController.addOpenChallenge(event.challenge);
+    }
+
+    if (event is LichessEventChallengeCanceled) {
+      _stateController.removeOpenChallenge(event.challenge.id);
+    }
+
+    if (event is LichessEventChallengeDeclined) {
+      _stateController.removeOpenChallenge(event.challenge.id);
+    }
+  }
+
+  // 888     888 888    d8b 888
+  // 888     888 888    Y8P 888
+  // 888     888 888        888
+  // 888     888 888888 888 888 .d8888b
+  // 888     888 888    888 888 88K
+  // 888     888 888    888 888 "Y8888b.
+  // Y88b. .d88P Y88b.  888 888      X88
+  // "Y88888P"   "Y888 888 888  88888P'
+
+  Future<Map<String, dynamic>> parseResponseJSON(
+      HttpClientResponse response) async {
+    if (response.statusCode == 200) {
+      try {
+        final text = await response.transform(utf8.decoder).join();
+        return jsonDecode(text);
+      } catch (e) {
+        throw ChessPlatformHttpException(
+            response, "Failed to parse response json");
+      }
+    } else if (response.statusCode == 401) {
+      throw ChessPlatformNotAuthorizedException(response, "Not authorized");
+    } else {
+      throw ChessPlatformHttpException(response, "Failed to retrieve response");
+    }
+  }
+
+  Future<String> getResponseText(HttpClientResponse response) async {
+    final responseText = await response.transform(utf8.decoder).join();
+    if (response.statusCode == 200) {
+      return responseText;
+    }
+
+    String errorDescription;
+    try {
+      final json = jsonDecode(responseText);
+      errorDescription = json["error"];
+    } catch (e) {
+      errorDescription = "Failed to parse response json";
+    }
+
+    if (response.statusCode == 401) {
+      throw ChessPlatformNotAuthorizedException(response, errorDescription);
+    } else {
+      throw ChessPlatformHttpException(response, errorDescription);
+    }
+  }
+
+  Future<HttpClientRequest> createGetRequest(path) async {
+    HttpClientRequest request =
+        await httpClient.getUrl(Uri.parse(options.lichessUrl + path));
+    if (token != null) {
+      request.headers.set('Authorization', "Bearer $token");
+    }
+    request.headers.contentType =
+        ContentType("application", "json", charset: "utf-8");
+    return request;
+  }
+
+  Future<HttpClientRequest> createPostRequest(path,
+      {ContentType? contentType, List<int>? body}) async {
+    HttpClientRequest request =
+        await httpClient.postUrl(Uri.parse(options.lichessUrl + path));
+    request.headers.set('Authorization', "Bearer $token");
+    if (contentType != null) request.headers.contentType = contentType;
+    if (body != null) {
+      request.headers.set('Content-Length', body.length.toString());
+      request.add(body);
+    }
+    return request;
+  }
+
+  List<int> createFormBody(Map<String, dynamic> entries) {
+    String formBody = "";
+    for (var entry in entries.entries) {
+      formBody += entry.key +
+          '=' +
+          Uri.encodeQueryComponent(entry.value.toString()) +
+          "&";
+    }
+    if (formBody != "") {
+      formBody = formBody.substring(0, formBody.length - 1);
+    }
+    return utf8.encode(formBody);
   }
 }

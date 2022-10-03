@@ -7,6 +7,7 @@ import 'package:open_chess_platform_api/chess_platform_state.dart';
 import 'package:open_chess_platform_api/chess_platform_user.dart';
 import 'package:open_chess_platform_api/models/challenge_result.dart';
 import 'package:open_chess_platform_api/models/chess_color_selection.dart';
+import 'package:open_chess_platform_api/models/chess_rating_range.dart';
 import 'package:open_chess_platform_api/models/platform_event.dart';
 import 'package:open_chess_platform_api/chess_platform_meta.dart';
 import 'package:open_chess_platform_api/models/time_option.dart';
@@ -49,5 +50,6 @@ abstract class ChessPlatform {
     bool rated = false,
     required TimeOption time,
     ChessColorSelection color = ChessColorSelection.random,
+    ChessRatingRange? ratingRange,
   });
 }

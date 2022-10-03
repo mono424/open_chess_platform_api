@@ -17,6 +17,7 @@ import 'package:open_chess_platform_api/exceptions/chess_platform_credentials_in
 import 'package:open_chess_platform_api/exceptions/chess_platform_credentials_unsupported.dart';
 import 'package:open_chess_platform_api/exceptions/chess_platform_http_exception.dart';
 import 'package:open_chess_platform_api/models/chess_color_selection.dart';
+import 'package:open_chess_platform_api/models/chess_rating_range.dart';
 import 'package:open_chess_platform_api/models/time_option.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event.dart';
 import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge.dart';
@@ -86,8 +87,8 @@ class Lichess extends ChessPlatform {
 
   // Managed State
   late final ChessPlatformStateController _stateController =
-      ChessPlatformStateController<LichessUser, LichessGame, LichessChallenge>(
-          ChessPlatformState());
+      ChessPlatformStateController<LichessUser, LichessGame,
+          LichessChallenge>();
 
   // Authentication
   String? token;
@@ -382,10 +383,11 @@ class Lichess extends ChessPlatform {
   Future<CancelableOperation<ChessPlatformGame>> seekGame(
       {bool rated = false,
       required TimeOption time,
-      ChessColorSelection color = ChessColorSelection.random}) async {
+      ChessColorSelection color = ChessColorSelection.random,
+      ChessRatingRange? ratingRange}) async {
     LichessEventGameStarted? lastEvent;
     late StreamSubscription eventListener;
-    eventListener = (await listenForEvents()).listen((e) {
+    eventListener = outStream.listen((e) {
       if (e is LichessEventGameStarted) {
         lastEvent = e;
         eventListener.cancel();

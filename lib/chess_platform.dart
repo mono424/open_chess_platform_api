@@ -5,7 +5,6 @@ import 'package:open_chess_platform_api/chess_platform_credentials.dart';
 import 'package:open_chess_platform_api/chess_platform_game.dart';
 import 'package:open_chess_platform_api/chess_platform_state.dart';
 import 'package:open_chess_platform_api/chess_platform_user.dart';
-import 'package:open_chess_platform_api/models/challenge_result.dart';
 import 'package:open_chess_platform_api/models/chess_color_selection.dart';
 import 'package:open_chess_platform_api/models/chess_rating_range.dart';
 import 'package:open_chess_platform_api/models/platform_event.dart';
@@ -38,10 +37,10 @@ abstract class ChessPlatform {
   Future<List<ChessPlatformUser>> getFriend(String query);
 
   // Challenge an other user.
-  Future<ChallengeResult> createChallenge(
+  Future<CancelableOperation<ChessPlatformGame>> createChallenge(
     String userId, {
     bool rated = false,
-    TimeOption time,
+    required TimeOption time,
     ChessColorSelection color = ChessColorSelection.random,
   });
 

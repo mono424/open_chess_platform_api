@@ -275,7 +275,7 @@ class Lichess extends ChessPlatform {
   }
 
   @override
-  Future<LichessChallengeResult> createChallenge(
+  Future<LichessChallengeResult> createNewChallenge(
     String userId, {
     bool rated = false,
     TimeOption? time,
@@ -405,6 +405,38 @@ class Lichess extends ChessPlatform {
     }), onCancel: () {
       seekListener.cancel();
       eventListener.cancel();
+    });
+  }
+
+  @override
+  Future<CancelableOperation<ChessPlatformGame>> createChallenge(
+    String userId, {
+    bool rated = false,
+    required TimeOption time,
+    ChessColorSelection color = ChessColorSelection.random,
+  }) async {
+    LichessEventGameStarted? lastEvent;
+    late StreamSubscription eventListener;
+
+    final challenge = await createNewChallenge(userId,
+        rated: rated, time: time, color: color);
+
+    eventListener = outStream.listen((e) {
+      if (e is LichessEventGameStarted &&
+          e.game.fullId == challenge.getChallengeId()) {
+        lastEvent = e;
+        eventListener.cancel();
+      }
+    });
+
+    return CancelableOperation.fromFuture(Future(() async {
+      await eventListener.asFuture();
+      return lastEvent!.game;
+    }), onCancel: () async {
+      await Future.wait([
+        eventListener.cancel(),
+        cancelChallenge(challenge.getChallengeId())
+      ]);
     });
   }
 

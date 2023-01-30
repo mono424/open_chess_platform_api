@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:chess_cloud_provider/chess_platform_challenge.dart';
-import 'package:chess_cloud_provider/chess_platform_game.dart';
-import 'package:chess_cloud_provider/chess_platform_user.dart';
+import 'package:open_chess_platform_api/chess_platform_challenge.dart';
+import 'package:open_chess_platform_api/chess_platform_game.dart';
+import 'package:open_chess_platform_api/chess_platform_user.dart';
 
 class ChessPlatformState<U extends ChessPlatformUser,
     G extends ChessPlatformGame, C extends ChessPlatformChallenge> {

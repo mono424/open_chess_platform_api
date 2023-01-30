@@ -1,7 +1,7 @@
-library chess_cloud_provider;
+library open_chess_platform_api;
 
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_count.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_user.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_count.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_user.dart';
 
 class LichessAccount extends LichessUser {
   late int completionRate;

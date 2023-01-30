@@ -1,7 +1,7 @@
-import 'package:chess_cloud_provider/chess_platform_game.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_compat.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_opponent.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_variant.dart';
+import 'package:open_chess_platform_api/chess_platform_game.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_compat.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_opponent.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_variant.dart';
 
 class LichessGame extends ChessPlatformGame {
   @override

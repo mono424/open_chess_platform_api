@@ -1,11 +1,11 @@
-library chess_cloud_provider;
+library open_chess_platform_api;
 
-import 'package:chess_cloud_provider/models/platform_event.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_challenge.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_challenge_canceled.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_challenge_declined.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_game_finish.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_game_started.dart';
+import 'package:open_chess_platform_api/models/platform_event.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge_canceled.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge_declined.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_game_finish.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_game_started.dart';
 
 abstract class LichessEvent extends PlatformEvent {
   late final String type;

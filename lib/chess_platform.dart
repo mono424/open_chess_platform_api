@@ -1,15 +1,15 @@
-library chess_cloud_provider;
+library open_chess_platform_api;
 
 import 'package:async/async.dart';
-import 'package:chess_cloud_provider/chess_platform_credentials.dart';
-import 'package:chess_cloud_provider/chess_platform_game.dart';
-import 'package:chess_cloud_provider/chess_platform_state.dart';
-import 'package:chess_cloud_provider/chess_platform_user.dart';
-import 'package:chess_cloud_provider/models/chess_color_selection.dart';
-import 'package:chess_cloud_provider/models/chess_rating_range.dart';
-import 'package:chess_cloud_provider/models/platform_event.dart';
-import 'package:chess_cloud_provider/chess_platform_meta.dart';
-import 'package:chess_cloud_provider/models/time_option.dart';
+import 'package:open_chess_platform_api/chess_platform_credentials.dart';
+import 'package:open_chess_platform_api/chess_platform_game.dart';
+import 'package:open_chess_platform_api/chess_platform_state.dart';
+import 'package:open_chess_platform_api/chess_platform_user.dart';
+import 'package:open_chess_platform_api/models/chess_color_selection.dart';
+import 'package:open_chess_platform_api/models/chess_rating_range.dart';
+import 'package:open_chess_platform_api/models/platform_event.dart';
+import 'package:open_chess_platform_api/chess_platform_meta.dart';
+import 'package:open_chess_platform_api/models/time_option.dart';
 
 abstract class ChessPlatform {
   /// Stores general information about the platform.

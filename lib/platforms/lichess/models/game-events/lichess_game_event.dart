@@ -1,9 +1,9 @@
-library chess_cloud_provider;
+library open_chess_platform_api;
 
-import 'package:chess_cloud_provider/models/platform_event.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event_chat_line.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event_game_full.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event_game_state.dart';
+import 'package:open_chess_platform_api/models/platform_event.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event_chat_line.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event_game_full.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event_game_state.dart';
 
 abstract class LichessGameEvent extends PlatformEvent {
   late final String type;

@@ -1,7 +1,7 @@
-library chess_cloud_provider;
+library open_chess_platform_api;
 
-import 'package:chess_cloud_provider/models/challenge_result.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_challenge.dart';
+import 'package:open_chess_platform_api/models/challenge_result.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_challenge.dart';
 
 class LichessChallengeResult extends ChallengeResult {
   late LichessChallenge challenge;

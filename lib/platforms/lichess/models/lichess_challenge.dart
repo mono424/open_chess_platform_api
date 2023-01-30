@@ -1,10 +1,10 @@
-library chess_cloud_provider;
+library open_chess_platform_api;
 
-import 'package:chess_cloud_provider/chess_platform_challenge.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_challeng_participant.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_perf.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_time_control.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_variant.dart';
+import 'package:open_chess_platform_api/chess_platform_challenge.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_challeng_participant.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_perf.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_time_control.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_variant.dart';
 
 class LichessChallenge extends ChessPlatformChallenge {
   @override

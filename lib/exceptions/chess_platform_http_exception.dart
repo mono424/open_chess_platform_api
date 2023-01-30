@@ -1,8 +1,8 @@
-library chess_cloud_provider;
+library open_chess_platform_api;
 
 import 'dart:io';
 
-import 'package:chess_cloud_provider/chess_platform_exception.dart';
+import 'package:open_chess_platform_api/chess_platform_exception.dart';
 
 class ChessPlatformHttpException extends ChessPlatformException {
   final HttpClientResponse response;

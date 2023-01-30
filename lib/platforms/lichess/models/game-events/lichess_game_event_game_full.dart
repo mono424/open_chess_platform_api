@@ -1,11 +1,11 @@
-library chess_cloud_provider;
+library open_chess_platform_api;
 
-import 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_game_event_player.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_game_event_state.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_perf.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_clock.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_variant.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_game_event_player.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_game_event_state.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_perf.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_clock.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_variant.dart';
 
 // {"id":"Z0kuazpE","variant":{"key":"standard","name":"Standard","short":"Std"},"clock":{"initial":1800000,"increment":0},"speed":"classical","perf":{"name":"Classical"},"rated":false,"createdAt":1655719938193,"white":{"id":"mono424","name":"mono424","title":null,"rating":1500,"provisional":true},"black":{"id":"mono425","name":"mono425","title":null,"rating":1500,"provisional":true},"initialFen":"startpos","type":"gameFull","state":{"type":"gameState","moves":"e2e4 b8c6 d2d4 e7e6 d4d5 e6d5 e4d5 c6e7 d5d6 c7d6 g1f3 g8f6 f1d3 b7b6 e1g1 c8b7 f1e1 a8c8 a2a3 c8c5 b2b4 c5g5 f3g5 h7h6 g5f7 e8f7 h2h3 d8c7 d1f3 b7f3 g2g3 c7b7 e1e3","wtime":1580560,"btime":1710370,"winc":0,"binc":0,"status":"started"}}
 

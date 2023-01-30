@@ -4,8 +4,6 @@ import 'package:open_chess_platform_api/platforms/lichess/models/lichess_count.d
 import 'package:open_chess_platform_api/platforms/lichess/models/lichess_user.dart';
 
 class LichessAccount extends LichessUser {
-  late int nbFollowing;
-  late int nbFollowers;
   late int completionRate;
   late LichessCount count;
   late bool followable;
@@ -23,8 +21,6 @@ class LichessAccount extends LichessUser {
       required playTime,
       required language,
       required url,
-      required this.nbFollowing,
-      required this.nbFollowers,
       required this.completionRate,
       required this.count,
       required this.followable,
@@ -43,8 +39,6 @@ class LichessAccount extends LichessUser {
             url: url);
 
   LichessAccount.fromJson(Map<String, dynamic> json) : super.fromJson(json) {
-    nbFollowing = json['nbFollowing'];
-    nbFollowers = json['nbFollowers'];
     completionRate = json['completionRate'];
     count = LichessCount.fromJson(json['count']);
     followable = json['followable'];
@@ -56,8 +50,6 @@ class LichessAccount extends LichessUser {
   @override
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = super.toJson();
-    data['nbFollowing'] = nbFollowing;
-    data['nbFollowers'] = nbFollowers;
     data['completionRate'] = completionRate;
     data['count'] = count.toJson();
     data['followable'] = followable;

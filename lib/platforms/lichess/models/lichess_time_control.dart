@@ -1,4 +1,4 @@
-library open_chess_platform_api;
+library chess_cloud_provider;
 
 class LichessTimeControl {
   late String type;

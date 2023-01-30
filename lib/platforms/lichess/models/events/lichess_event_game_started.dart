@@ -1,7 +1,7 @@
-library open_chess_platform_api;
+library chess_cloud_provider;
 
-import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/lichess_game.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/lichess_game.dart';
 
 // {"type":"gameStart","game":{"fullId":"Pl7c8tq188TF","gameId":"Pl7c8tq1","fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1","color":"white","lastMove":"","source":"friend","variant":{"key":"standard","name":"Standard"},"speed":"correspondence","perf":"correspondence","rated":false,"hasMoved":false,"opponent":{"id":"mono424","username":"mono424","rating":1500},"isMyTurn":true,"compat":{"bot":false,"board":true},"id":"Pl7c8tq1"}}
 

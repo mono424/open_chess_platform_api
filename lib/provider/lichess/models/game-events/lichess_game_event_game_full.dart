@@ -12,28 +12,28 @@ import 'package:chess_cloud_provider/provider/lichess/models/lichess_variant.dar
 class LichessGameEventGameFull extends LichessGameEvent {
   late final String id;
   late final LichessVariant variant;
-  late final LichessClock clock;
+  late final LichessClock? clock;
   late final String speed;
-  late final LichessPerf perf;
+  late final LichessPerf? perf;
   late final bool rated;
   late final int createdAt;
-  late final GameEventPlayer white;
-  late final GameEventPlayer black;
+  late final GameEventPlayer? white;
+  late final GameEventPlayer? black;
   late final String initialFen;
-  late final GameEventState state;
+  late final GameEventState? state;
 
   LichessGameEventGameFull.fromJson(Map<String, dynamic> json) : super.fromJson(json) {
     id = json["id"];
     variant = LichessVariant.fromJson(json['variant']);
-    clock = LichessClock.fromJson(json['clock']);
+    clock = (json['clock'] != null) ? LichessClock.fromJson(json['clock']) : null;
     speed = json['speed'];
-    perf = LichessPerf.fromJson(json['perf']);
+    perf = (json['perf'] != null) ? LichessPerf.fromJson(json['perf']) : null;
     rated = json['rated'];
     createdAt = json['createdAt'];
-    white = GameEventPlayer.fromJson(json['white']);
-    black = GameEventPlayer.fromJson(json['black']);
+    white = (json['white'] != null) ? GameEventPlayer.fromJson(json['white']) : null;
+    black = (json['black'] != null) ? GameEventPlayer.fromJson(json['black']) : null;
     initialFen = json['initialFen'];
-    state = GameEventState.fromJson(json['state']);
+    state = (json['state'] != null) ? GameEventState.fromJson(json['state']) : null;
   }
 
   @override
@@ -41,17 +41,16 @@ class LichessGameEventGameFull extends LichessGameEvent {
     Map<String, dynamic> map = super.toJson();
     map['id'] = id;
     map['variant'] = variant.toJson();
-    map['clock'] = clock.toJson();
+    if (clock != null) map['clock'] = clock!.toJson();
     map['speed'] = speed;
-    map['perf'] = perf.toJson();
+    map['perf'] = perf?.toJson();
     map['rated'] = rated;
     map['createdAt'] = createdAt;
-    map['white'] = white.toJson();
-    map['black'] = black.toJson();
+    map['white'] = white?.toJson();
+    map['black'] = black?.toJson();
     map['initialFen'] = initialFen;
     map['type'] = type;
-    map['state'] = state.toJson();
+    map['state'] = state?.toJson();
     return map;
   }
-
 }

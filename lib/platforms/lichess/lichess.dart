@@ -1,80 +1,80 @@
-library open_chess_platform_api;
+library chess_cloud_provider;
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:async/async.dart';
+import 'package:chess_cloud_provider/models/challenge_request.dart';
 import 'package:flutter/widgets.dart';
-import 'package:open_chess_platform_api/chess_platform_challenge.dart';
-import 'package:open_chess_platform_api/chess_platform_credentials.dart';
-import 'package:open_chess_platform_api/chess_platform_game.dart';
-import 'package:open_chess_platform_api/chess_platform_meta.dart';
-import 'package:open_chess_platform_api/chess_platform.dart';
-import 'package:open_chess_platform_api/chess_platform_state.dart';
-import 'package:open_chess_platform_api/chess_platform_user.dart';
-import 'package:open_chess_platform_api/exceptions/chess_platform_credentials_invalid.dart';
-import 'package:open_chess_platform_api/exceptions/chess_platform_credentials_unsupported.dart';
-import 'package:open_chess_platform_api/exceptions/chess_platform_http_exception.dart';
-import 'package:open_chess_platform_api/models/challenge_request.dart';
-import 'package:open_chess_platform_api/models/chess_color_selection.dart';
-import 'package:open_chess_platform_api/models/chess_rating_range.dart';
-import 'package:open_chess_platform_api/models/time_option.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge_canceled.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge_declined.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_game_finish.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_game_started.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/lichess_account.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/lichess_challenge.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/lichess_challenge_result.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/lichess_game.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/lichess_game_import_result.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/lichess_options.dart';
-import 'package:open_chess_platform_api/platforms/lichess/models/lichess_user.dart';
+import 'package:chess_cloud_provider/chess_platform_challenge.dart';
+import 'package:chess_cloud_provider/chess_platform_credentials.dart';
+import 'package:chess_cloud_provider/chess_platform_game.dart';
+import 'package:chess_cloud_provider/chess_platform_meta.dart';
+import 'package:chess_cloud_provider/chess_platform.dart';
+import 'package:chess_cloud_provider/chess_platform_state.dart';
+import 'package:chess_cloud_provider/chess_platform_user.dart';
+import 'package:chess_cloud_provider/exceptions/chess_platform_credentials_invalid.dart';
+import 'package:chess_cloud_provider/exceptions/chess_platform_credentials_unsupported.dart';
+import 'package:chess_cloud_provider/exceptions/chess_platform_http_exception.dart';
+import 'package:chess_cloud_provider/models/chess_color_selection.dart';
+import 'package:chess_cloud_provider/models/chess_rating_range.dart';
+import 'package:chess_cloud_provider/models/time_option.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_challenge.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_challenge_canceled.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_challenge_declined.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_game_finish.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_game_started.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/lichess_account.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/lichess_challenge.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/lichess_challenge_result.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/lichess_game.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/lichess_game_import_result.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/lichess_options.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/lichess_user.dart';
 
-export 'package:open_chess_platform_api/exceptions/chess_platform_credentials_invalid.dart';
-export 'package:open_chess_platform_api/exceptions/chess_platform_credentials_unsupported.dart';
-export 'package:open_chess_platform_api/exceptions/chess_platform_http_exception.dart';
+export 'package:chess_cloud_provider/exceptions/chess_platform_credentials_invalid.dart';
+export 'package:chess_cloud_provider/exceptions/chess_platform_credentials_unsupported.dart';
+export 'package:chess_cloud_provider/exceptions/chess_platform_http_exception.dart';
 
-export 'package:open_chess_platform_api/models/challenge_result.dart';
-export 'package:open_chess_platform_api/models/chess_color_selection.dart';
-export 'package:open_chess_platform_api/models/game_time_type.dart';
-export 'package:open_chess_platform_api/models/platform_event.dart';
-export 'package:open_chess_platform_api/models/time_option.dart';
+export 'package:chess_cloud_provider/models/challenge_result.dart';
+export 'package:chess_cloud_provider/models/chess_color_selection.dart';
+export 'package:chess_cloud_provider/models/game_time_type.dart';
+export 'package:chess_cloud_provider/models/platform_event.dart';
+export 'package:chess_cloud_provider/models/time_option.dart';
 
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_account.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_challeng_participant.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_challenge.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_challenge_result.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_clock.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_compat.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_count.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_game.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_game_event_player.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_game_event_state.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_game_import_result.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_opponent.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_options.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_perf.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_playtime.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_rating_info.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_time_control.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_user.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_user_ratings.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/lichess_variant.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge_canceled.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_challenge_declined.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_game_finish.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event_game_started.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event_chat_line.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event_game_full.dart';
-export 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event_game_state.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_account.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_challeng_participant.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_challenge.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_challenge_result.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_clock.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_compat.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_count.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_game.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_game_event_player.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_game_event_state.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_game_import_result.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_opponent.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_options.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_perf.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_playtime.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_rating_info.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_time_control.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_user.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_user_ratings.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_variant.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_challenge.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_challenge_canceled.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_challenge_declined.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_game_finish.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event_game_started.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event_chat_line.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event_game_full.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event_game_state.dart';
 
 class Lichess extends ChessPlatform {
   final LichessOptions options;
@@ -104,7 +104,7 @@ class Lichess extends ChessPlatform {
             description:
                 "Lichess is a free (really), libre, no-ads, open source chess server.",
             logo: AssetImage("assets/lichess.png",
-                package: "open_chess_platform_api"))) {
+                package: "chess_cloud_provider"))) {
     httpClient.connectionTimeout = options.connectionTimeout;
     httpClient.idleTimeout = options.idleTimeout;
   }

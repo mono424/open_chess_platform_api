@@ -1,4 +1,4 @@
-library open_chess_platform_api;
+library chess_cloud_provider;
 
 class LichessOptions {
   String lichessUrl; // https://xyz.com/api/lichess/refresh-token

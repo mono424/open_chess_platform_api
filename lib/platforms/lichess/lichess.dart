@@ -16,6 +16,7 @@ import 'package:open_chess_platform_api/chess_platform_user.dart';
 import 'package:open_chess_platform_api/exceptions/chess_platform_credentials_invalid.dart';
 import 'package:open_chess_platform_api/exceptions/chess_platform_credentials_unsupported.dart';
 import 'package:open_chess_platform_api/exceptions/chess_platform_http_exception.dart';
+import 'package:open_chess_platform_api/models/challenge_request.dart';
 import 'package:open_chess_platform_api/models/chess_color_selection.dart';
 import 'package:open_chess_platform_api/models/chess_rating_range.dart';
 import 'package:open_chess_platform_api/models/time_option.dart';
@@ -409,7 +410,7 @@ class Lichess extends ChessPlatform {
   }
 
   @override
-  Future<CancelableOperation<ChessPlatformGame>> createChallenge(
+  Future<ChallengeRequest> createChallenge(
     String userId, {
     bool rated = false,
     required TimeOption time,
@@ -429,7 +430,7 @@ class Lichess extends ChessPlatform {
       }
     });
 
-    return CancelableOperation.fromFuture(Future(() async {
+    return ChallengeRequest(CancelableOperation.fromFuture(Future(() async {
       await eventListener.asFuture();
       return lastEvent!.game;
     }), onCancel: () async {
@@ -437,7 +438,7 @@ class Lichess extends ChessPlatform {
         eventListener.cancel(),
         cancelChallenge(challenge.getChallengeId())
       ]);
-    });
+    }), challenge.getChallengeId());
   }
 
   @override

@@ -1,6 +1,6 @@
-library open_chess_platform_api;
+library chess_cloud_provider;
 
-import 'package:open_chess_platform_api/platforms/lichess/models/lichess_rating_info.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/lichess_rating_info.dart';
 
 class LichessUserRatings {
   late LichessRatingInfo blitz;

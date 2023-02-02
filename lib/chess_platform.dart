@@ -5,6 +5,7 @@ import 'package:chess_cloud_provider/chess_platform_credentials.dart';
 import 'package:chess_cloud_provider/chess_platform_game.dart';
 import 'package:chess_cloud_provider/chess_platform_state.dart';
 import 'package:chess_cloud_provider/chess_platform_user.dart';
+import 'package:chess_cloud_provider/models/challenge_request.dart';
 import 'package:chess_cloud_provider/models/chess_color_selection.dart';
 import 'package:chess_cloud_provider/models/chess_rating_range.dart';
 import 'package:chess_cloud_provider/models/platform_event.dart';
@@ -37,7 +38,7 @@ abstract class ChessPlatform {
   Future<List<ChessPlatformUser>> getFriend(String query);
 
   // Challenge an other user.
-  Future<CancelableOperation<ChessPlatformGame>> createChallenge(
+  Future<ChallengeRequest> createChallenge(
     String userId, {
     bool rated = false,
     required TimeOption time,

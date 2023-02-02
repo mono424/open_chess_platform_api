@@ -557,6 +557,9 @@ class Lichess extends ChessPlatform {
     if (token != null) {
       request.headers.set('Authorization', "Bearer $token");
     }
+    if (options.userAgent != null) {
+      request.headers.set('User-Agent', options.userAgent!);
+    }
     request.headers.contentType =
         ContentType("application", "json", charset: "utf-8");
     return request;
@@ -567,6 +570,9 @@ class Lichess extends ChessPlatform {
     HttpClientRequest request =
         await httpClient.postUrl(Uri.parse(options.lichessUrl + path));
     request.headers.set('Authorization', "Bearer $token");
+    if (options.userAgent != null) {
+      request.headers.set('User-Agent', options.userAgent!);
+    }
     if (contentType != null) request.headers.contentType = contentType;
     if (body != null) {
       request.headers.set('Content-Length', body.length.toString());

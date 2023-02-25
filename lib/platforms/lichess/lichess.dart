@@ -78,7 +78,7 @@ export 'package:chess_cloud_provider/platforms/lichess/models/game-events/liches
 
 class Lichess extends ChessPlatform {
   final LichessOptions options;
-  final HttpClient httpClient = HttpClient();
+  late final HttpClient httpClient;
 
   // Handles the outstream.
   final StreamController<LichessEvent> _outStreamController =
@@ -105,6 +105,7 @@ class Lichess extends ChessPlatform {
                 "Lichess is a free (really), libre, no-ads, open source chess server.",
             logo: AssetImage("assets/lichess.png",
                 package: "chess_cloud_provider"))) {
+    httpClient = options.httpClient ?? HttpClient();
     httpClient.connectionTimeout = options.connectionTimeout;
     httpClient.idleTimeout = options.idleTimeout;
   }

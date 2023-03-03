@@ -11,13 +11,15 @@ import 'package:chess_cloud_provider/models/chess_rating_range.dart';
 import 'package:chess_cloud_provider/models/platform_event.dart';
 import 'package:chess_cloud_provider/chess_platform_meta.dart';
 import 'package:chess_cloud_provider/models/time_option.dart';
+import 'package:chess_cloud_provider/chess_platform_logger.dart';
 
 abstract class ChessPlatform {
   /// Stores general information about the platform.
   final ChessPlatformMeta meta;
+  final ChessPlatformLogger logger;
 
   /// Initializes a new ChessPlatform with specified [meta] data.
-  ChessPlatform(this.meta);
+  ChessPlatform(this.meta, { this.logger = const DummyLogger() });
 
   /// Returns an auto managed state
   ChessPlatformState getState();

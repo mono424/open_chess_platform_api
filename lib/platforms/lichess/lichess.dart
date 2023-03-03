@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:chess_cloud_provider/models/challenge_request.dart';
+import 'package:chess_cloud_provider/chess_platform_logger.dart';
 import 'package:flutter/widgets.dart';
 import 'package:chess_cloud_provider/chess_platform_challenge.dart';
 import 'package:chess_cloud_provider/chess_platform_credentials.dart';
@@ -98,13 +99,13 @@ class Lichess extends ChessPlatform {
   Stream<LichessEvent>? _eventStream;
   StreamSubscription<LichessEvent>? _eventStreamSub;
 
-  Lichess(this.options)
+  Lichess(this.options, { ChessPlatformLogger logger = const DummyLogger() })
       : super(const ChessPlatformMeta(
             name: "Lichess",
             description:
                 "Lichess is a free (really), libre, no-ads, open source chess server.",
             logo: AssetImage("assets/lichess.png",
-                package: "chess_cloud_provider"))) {
+                package: "chess_cloud_provider")), logger: logger) {
     httpClient = options.httpClient ?? HttpClient();
     httpClient.connectionTimeout = options.connectionTimeout;
     httpClient.idleTimeout = options.idleTimeout;
@@ -210,7 +211,10 @@ class Lichess extends ChessPlatform {
     return const LineSplitter()
         .bind(utf8.decoder.bind(response))
         .where((e) => e != "")
-        .map((e) => LichessEvent.parseJson(jsonDecode(e)));
+        .map((e) {
+          logger.messageIn("[EventStream] $e");
+          return LichessEvent.parseJson(jsonDecode(e));
+        });
   }
 
   @override
@@ -226,7 +230,10 @@ class Lichess extends ChessPlatform {
     return const LineSplitter()
         .bind(utf8.decoder.bind(response))
         .where((e) => e != "")
-        .map((e) => LichessGameEvent.parseJson(jsonDecode(e)));
+        .map((e) {
+          logger.messageIn("[GameStream] $e");
+          return LichessGameEvent.parseJson(jsonDecode(e));
+        });
   }
 
   Future<Stream<List<int>>> getSeekStream(
@@ -276,7 +283,6 @@ class Lichess extends ChessPlatform {
     return LichessChallengeResult.fromJson(responseJson);
   }
 
-  @override
   Future<LichessChallengeResult> createNewChallenge(
     String userId, {
     bool rated = false,
@@ -486,6 +492,7 @@ class Lichess extends ChessPlatform {
     _outStreamController.add(event);
 
     if (event is LichessEventGameStarted) {
+      _stateController.removeOpenChallenge(event.game.gameId);
       _stateController.addRunningGame(event.game);
     }
 
@@ -520,6 +527,7 @@ class Lichess extends ChessPlatform {
     if (response.statusCode == 200) {
       try {
         final text = await response.transform(utf8.decoder).join();
+        logger.messageIn("[HttpResponse] $text");
         return jsonDecode(text);
       } catch (e) {
         throw ChessPlatformHttpException(
@@ -534,6 +542,8 @@ class Lichess extends ChessPlatform {
 
   Future<String> getResponseText(HttpClientResponse response) async {
     final responseText = await response.transform(utf8.decoder).join();
+    logger.messageIn("[HttpResponse] $responseText");
+
     if (response.statusCode == 200) {
       return responseText;
     }

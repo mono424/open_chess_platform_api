@@ -10,16 +10,11 @@ class GameEventState {
   late final String status;
   late final bool wdraw;
   late final bool bdraw;
+  late final bool wtakeback;
+  late final bool btakeback;
   late final String? winner;
 
-  GameEventState(
-      {required this.type,
-      required this.moves,
-      required this.wtime,
-      required this.btime,
-      required this.winc,
-      required this.binc,
-      required this.status});
+  GameEventState();
 
   GameEventState.fromJson(Map<String, dynamic> json) {
     type = json['type'];
@@ -31,6 +26,8 @@ class GameEventState {
     status = json['status'];
     bdraw = json['bdraw'] ?? false;
     wdraw = json['wdraw'] ?? false;
+    wtakeback = json['wtakeback'] ?? false;
+    btakeback = json['btakeback'] ?? false;
     winner = json['winner'];
   }
 
@@ -45,6 +42,8 @@ class GameEventState {
     data['status'] = status;
     data['bdraw'] = bdraw;
     data['wdraw'] = wdraw;
+    data['wtakeback'] = wtakeback;
+    data['btakeback'] = btakeback;
     if (winner != null) data['winner'] = winner;
     return data;
   }

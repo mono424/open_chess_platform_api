@@ -6,7 +6,7 @@ import 'package:chess_cloud_provider/chess_platform_game.dart';
 import 'package:chess_cloud_provider/chess_platform_state.dart';
 import 'package:chess_cloud_provider/chess_platform_user.dart';
 import 'package:chess_cloud_provider/models/challenge_request.dart';
-import 'package:chess_cloud_provider/models/chess_color_selection.dart';
+import 'package:chess_cloud_provider/models/chess_color.dart';
 import 'package:chess_cloud_provider/models/chess_rating_range.dart';
 import 'package:chess_cloud_provider/models/platform_event.dart';
 import 'package:chess_cloud_provider/chess_platform_meta.dart';
@@ -44,14 +44,14 @@ abstract class ChessPlatform {
     String userId, {
     bool rated = false,
     required TimeOption time,
-    ChessColorSelection color = ChessColorSelection.random,
+    ChessColor color = ChessColor.random,
   });
 
   // Seeks a random oppoent and starts a new game
   Future<CancelableOperation<ChessPlatformGame>> seekGame({
     bool rated = false,
     required TimeOption time,
-    ChessColorSelection color = ChessColorSelection.random,
+    ChessColor color = ChessColor.random,
     ChessRatingRange? ratingRange,
   });
 }

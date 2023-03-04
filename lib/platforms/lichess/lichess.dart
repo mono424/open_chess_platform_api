@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:async/async.dart';
 import 'package:chess_cloud_provider/models/challenge_request.dart';
 import 'package:chess_cloud_provider/chess_platform_logger.dart';
+import 'package:chess_cloud_provider/platforms/lichess/game.dart';
 import 'package:flutter/widgets.dart';
 import 'package:chess_cloud_provider/chess_platform_challenge.dart';
 import 'package:chess_cloud_provider/chess_platform_credentials.dart';
@@ -18,7 +19,7 @@ import 'package:chess_cloud_provider/chess_platform_user.dart';
 import 'package:chess_cloud_provider/exceptions/chess_platform_credentials_invalid.dart';
 import 'package:chess_cloud_provider/exceptions/chess_platform_credentials_unsupported.dart';
 import 'package:chess_cloud_provider/exceptions/chess_platform_http_exception.dart';
-import 'package:chess_cloud_provider/models/chess_color_selection.dart';
+import 'package:chess_cloud_provider/models/chess_color.dart';
 import 'package:chess_cloud_provider/models/chess_rating_range.dart';
 import 'package:chess_cloud_provider/models/time_option.dart';
 import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event.dart';
@@ -31,7 +32,6 @@ import 'package:chess_cloud_provider/platforms/lichess/models/game-events/liches
 import 'package:chess_cloud_provider/platforms/lichess/models/lichess_account.dart';
 import 'package:chess_cloud_provider/platforms/lichess/models/lichess_challenge.dart';
 import 'package:chess_cloud_provider/platforms/lichess/models/lichess_challenge_result.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_game.dart';
 import 'package:chess_cloud_provider/platforms/lichess/models/lichess_game_import_result.dart';
 import 'package:chess_cloud_provider/platforms/lichess/models/lichess_options.dart';
 import 'package:chess_cloud_provider/platforms/lichess/models/lichess_user.dart';
@@ -41,7 +41,7 @@ export 'package:chess_cloud_provider/exceptions/chess_platform_credentials_unsup
 export 'package:chess_cloud_provider/exceptions/chess_platform_http_exception.dart';
 
 export 'package:chess_cloud_provider/models/challenge_result.dart';
-export 'package:chess_cloud_provider/models/chess_color_selection.dart';
+export 'package:chess_cloud_provider/models/chess_color.dart';
 export 'package:chess_cloud_provider/models/game_time_type.dart';
 export 'package:chess_cloud_provider/models/platform_event.dart';
 export 'package:chess_cloud_provider/models/time_option.dart';
@@ -53,7 +53,7 @@ export 'package:chess_cloud_provider/platforms/lichess/models/lichess_challenge_
 export 'package:chess_cloud_provider/platforms/lichess/models/lichess_clock.dart';
 export 'package:chess_cloud_provider/platforms/lichess/models/lichess_compat.dart';
 export 'package:chess_cloud_provider/platforms/lichess/models/lichess_count.dart';
-export 'package:chess_cloud_provider/platforms/lichess/models/lichess_game.dart';
+export 'package:chess_cloud_provider/platforms/lichess/models/lichess_game_info.dart';
 export 'package:chess_cloud_provider/platforms/lichess/models/lichess_game_event_player.dart';
 export 'package:chess_cloud_provider/platforms/lichess/models/lichess_game_event_state.dart';
 export 'package:chess_cloud_provider/platforms/lichess/models/lichess_game_import_result.dart';
@@ -88,7 +88,7 @@ class Lichess extends ChessPlatform {
       _outStreamController.stream.asBroadcastStream();
 
   // Managed State
-  late final ChessPlatformStateController _stateController =
+  late final ChessPlatformStateController<LichessUser, LichessGame, LichessChallenge> _stateController =
       ChessPlatformStateController<LichessUser, LichessGame,
           LichessChallenge>();
 
@@ -239,7 +239,7 @@ class Lichess extends ChessPlatform {
   Future<Stream<List<int>>> getSeekStream(
       {bool rated = false,
       required TimeOption time,
-      ChessColorSelection color = ChessColorSelection.random,
+      ChessColor color = ChessColor.random,
       List<int>? ratingRange}) async {
     Map<String, dynamic> data = {
       "rated": rated,
@@ -264,7 +264,7 @@ class Lichess extends ChessPlatform {
   Future<LichessChallengeResult> createOpenChallenge({
     bool rated = false,
     TimeOption? time,
-    ChessColorSelection color = ChessColorSelection.random,
+    ChessColor color = ChessColor.random,
   }) async {
     Map<String, dynamic> data = {"rated": rated, "color": color.text};
 
@@ -287,7 +287,7 @@ class Lichess extends ChessPlatform {
     String userId, {
     bool rated = false,
     TimeOption? time,
-    ChessColorSelection color = ChessColorSelection.random,
+    ChessColor color = ChessColor.random,
   }) async {
     Map<String, dynamic> data = {"rated": rated, "color": color.text};
 
@@ -391,13 +391,19 @@ class Lichess extends ChessPlatform {
   Future<CancelableOperation<ChessPlatformGame>> seekGame(
       {bool rated = false,
       required TimeOption time,
-      ChessColorSelection color = ChessColorSelection.random,
+      ChessColor color = ChessColor.random,
       ChessRatingRange? ratingRange}) async {
-    LichessEventGameStarted? lastEvent;
+
+    ChessPlatformGame? startedGame;
     late StreamSubscription eventListener;
-    eventListener = outStream.listen((e) {
-      if (e is LichessEventGameStarted) {
-        lastEvent = e;
+    eventListener = _stateController.state.stream.listen((e) {
+
+      // debugging
+      e.runningGames.forEach((e) {print(e.info.source);});
+
+      final games = e.runningGames.where((LichessGame e) => e.info.source == "lobby");
+      if (games.isNotEmpty) {
+        startedGame = games.first;
         eventListener.cancel();
       }
     });
@@ -409,7 +415,13 @@ class Lichess extends ChessPlatform {
     return CancelableOperation.fromFuture(Future(() async {
       await seekListener.asFuture();
       await eventListener.asFuture();
-      return lastEvent!.game;
+
+      ChessPlatformGame? lStartedGame = startedGame;
+      if (lStartedGame == null) {
+        throw Exception("Game not started");
+      }
+
+      return lStartedGame;
     }), onCancel: () {
       seekListener.cancel();
       eventListener.cancel();
@@ -421,25 +433,31 @@ class Lichess extends ChessPlatform {
     String userId, {
     bool rated = false,
     required TimeOption time,
-    ChessColorSelection color = ChessColorSelection.random,
+    ChessColor color = ChessColor.random,
   }) async {
-    LichessEventGameStarted? lastEvent;
+    ChessPlatformGame? startedGame;
     late StreamSubscription eventListener;
 
     final challenge = await createNewChallenge(userId,
         rated: rated, time: time, color: color);
 
-    eventListener = outStream.listen((e) {
-      if (e is LichessEventGameStarted &&
-          e.game.fullId == challenge.getChallengeId()) {
-        lastEvent = e;
+    eventListener = _stateController.state.stream.listen((e) {
+      final games = e.runningGames.where((LichessGame e) => e.id == challenge.getChallengeId());
+      if (games.isNotEmpty) {
+        startedGame = games.first;
         eventListener.cancel();
       }
     });
 
     return ChallengeRequest(CancelableOperation.fromFuture(Future(() async {
       await eventListener.asFuture();
-      return lastEvent!.game;
+
+      ChessPlatformGame? lStartedGame = startedGame;
+      if (lStartedGame == null) {
+        throw Exception("Game not started");
+      }
+
+      return lStartedGame;
     }), onCancel: () async {
       await Future.wait([
         eventListener.cancel(),
@@ -493,11 +511,11 @@ class Lichess extends ChessPlatform {
 
     if (event is LichessEventGameStarted) {
       _stateController.removeOpenChallenge(event.game.gameId);
-      _stateController.addRunningGame(event.game);
+      _stateController.addRunningGame(LichessGame(info: event.game, lichess: this));
     }
 
     if (event is LichessEventGameFinish) {
-      _stateController.removeRunningGame(event.game.id);
+      _stateController.removeRunningGame(event.game.gameId);
     }
 
     if (event is LichessEventChallenge) {

@@ -1,16 +1,16 @@
 library chess_cloud_provider;
 
 import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_game.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/lichess_game_info.dart';
 
 // {"type":"gameFinish","game":{"fullId":"81MCx9WWleFJ","gameId":"81MCx9WW","fen":"rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2","color":"white","lastMove":"d7d5","source":"friend","variant":{"key":"standard","name":"Standard"},"speed":"correspondence","perf":"correspondence","rated":false,"hasMoved":true,"opponent":{"id":"mono424","username":"mono424","rating":1500},"isMyTurn":false,"compat":{"bot":false,"board":true},"id":"81MCx9WW"}}
 
 class LichessEventGameFinish extends LichessEvent {
-  late final LichessGame game;
+  late final LichessGameInfo game;
 
   LichessEventGameFinish.fromJson(Map<String, dynamic> json)
       : super.fromJson(json) {
-    game = LichessGame.fromJson(json["game"]);
+    game = LichessGameInfo.fromJson(json["game"]);
   }
 
   @override

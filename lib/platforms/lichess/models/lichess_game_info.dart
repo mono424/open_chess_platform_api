@@ -1,12 +1,8 @@
-import 'package:chess_cloud_provider/chess_platform_game.dart';
 import 'package:chess_cloud_provider/platforms/lichess/models/lichess_compat.dart';
 import 'package:chess_cloud_provider/platforms/lichess/models/lichess_opponent.dart';
 import 'package:chess_cloud_provider/platforms/lichess/models/lichess_variant.dart';
 
-class LichessGame extends ChessPlatformGame {
-  @override
-  late final String id;
-
+class LichessGameInfo {
   late final String fullId;
   late final String gameId;
   late final String fen;
@@ -22,7 +18,7 @@ class LichessGame extends ChessPlatformGame {
   late final bool isMyTurn;
   late final LichessCompat compat;
 
-  LichessGame(
+  LichessGameInfo(
       {required this.fullId,
       required this.gameId,
       required this.fen,
@@ -36,10 +32,10 @@ class LichessGame extends ChessPlatformGame {
       required this.hasMoved,
       required this.opponent,
       required this.isMyTurn,
-      required this.compat,
-      required this.id});
+      required this.compat
+      });
 
-  LichessGame.fromJson(Map<String, dynamic> json) {
+  LichessGameInfo.fromJson(Map<String, dynamic> json) {
     fullId = json['fullId'];
     gameId = json['gameId'];
     fen = json['fen'];
@@ -54,7 +50,6 @@ class LichessGame extends ChessPlatformGame {
     opponent = LichessOpponent.fromJson(json['opponent']);
     isMyTurn = json['isMyTurn'];
     compat = LichessCompat.fromJson(json['compat']);
-    id = json['id'];
   }
 
   Map<String, dynamic> toJson() {
@@ -73,7 +68,7 @@ class LichessGame extends ChessPlatformGame {
     data['opponent'] = opponent.toJson();
     data['isMyTurn'] = isMyTurn;
     data['compat'] = compat.toJson();
-    data['id'] = id;
     return data;
   }
+
 }

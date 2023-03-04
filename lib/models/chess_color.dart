@@ -1,17 +1,17 @@
 library chess_cloud_provider;
 
-enum ChessColorSelection {
+enum ChessColor {
   random,
   white,
   black,
 }
 
-extension ChessColorSelectionExtension on ChessColorSelection {
+extension ChessColorExtension on ChessColor {
   String get text {
     switch (this) {
-      case ChessColorSelection.white:
+      case ChessColor.white:
         return "white";
-      case ChessColorSelection.black:
+      case ChessColor.black:
         return 'black';
       default:
         return "random";

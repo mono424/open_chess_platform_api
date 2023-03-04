@@ -29,7 +29,12 @@ class LichessUser extends ChessPlatformUser {
       required this.language,
       required this.url});
 
-  LichessRatingInfo getRating(GameTimeType type) {
+  @override
+  int getRating(GameTimeType type) {
+    return getRatingInfo(type).rating;
+  }
+
+  LichessRatingInfo getRatingInfo(GameTimeType type) {
     switch (type) {
       case GameTimeType.bullet:
         return userRatings.bullet;

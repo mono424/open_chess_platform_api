@@ -4,6 +4,7 @@ import 'package:chess_cloud_provider/models/platform_event.dart';
 import 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event_chat_line.dart';
 import 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event_game_full.dart';
 import 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event_game_state.dart';
+import 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event_opponent_gone.dart';
 
 abstract class LichessGameEvent extends PlatformEvent {
   late final String type;
@@ -18,6 +19,9 @@ abstract class LichessGameEvent extends PlatformEvent {
 
       case "chatLine":
         return LichessGameEventChatLine.fromJson(json);
+
+      case "opponentGone":
+        return LichessGameEventOponnentGone.fromJson(json);
 
       default:
         throw Exception("Invalid type");

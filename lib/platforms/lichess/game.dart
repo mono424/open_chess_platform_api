@@ -86,6 +86,7 @@ class LichessGame extends ChessPlatformGame {
     }
   }
 
+  /// Connect to lichess game stream
   Future<void> _connect() async {
     try {
       _stateController.setConnectionState(ChessGameConnectionState.connecting);

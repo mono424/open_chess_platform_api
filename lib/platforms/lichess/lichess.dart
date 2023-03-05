@@ -5,7 +5,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:async/async.dart';
-import 'package:chess_cloud_provider/chess_platform_exception.dart';
 import 'package:chess_cloud_provider/exceptions/chess_platform_challenge_declined.dart';
 import 'package:chess_cloud_provider/exceptions/chess_platform_connection_error.dart';
 import 'package:chess_cloud_provider/exceptions/chess_platform_illegal_action.dart';
@@ -201,6 +200,7 @@ class Lichess extends ChessPlatform {
 
   Future<LichessAccount> getAccount() async {
     final request = await createGetRequest("/api/account");
+    _logRequest(request);
     final response = await request.close();
     final responseJson = await parseResponseJSON(response);
     return LichessAccount.fromJson(responseJson);
@@ -208,6 +208,7 @@ class Lichess extends ChessPlatform {
 
   Future<List<LichessUser>> getFollowing() async {
     final request = await createGetRequest("/api/rel/following");
+    _logRequest(request);
     final response = await request.close();
     final responseText = await getResponseText(response);
 
@@ -222,6 +223,7 @@ class Lichess extends ChessPlatform {
     final request = await createGetRequest("/api/stream/event");
     request.headers.set('Connection', 'Keep-Alive');
     request.headers.set('Keep-Alive', 'timeout=5, max=1000');
+    _logRequest(request);
     final response = await request.close();
     return const LineSplitter()
         .bind(utf8.decoder.bind(response))
@@ -241,6 +243,7 @@ class Lichess extends ChessPlatform {
     final request = await createGetRequest("/api/board/game/stream/$gameId");
     request.headers.set('Connection', 'Keep-Alive');
     request.headers.set('Keep-Alive', 'timeout=5, max=1000');
+    _logRequest(request);
     final response = await request.close();
     return const LineSplitter()
         .bind(utf8.decoder.bind(response))
@@ -272,7 +275,7 @@ class Lichess extends ChessPlatform {
         contentType: ContentType("application", "x-www-form-urlencoded",
             charset: "utf-8"),
         body: body);
-
+    _logRequest(request, body: body);
     return request.close();
   }
 
@@ -284,7 +287,7 @@ class Lichess extends ChessPlatform {
     Map<String, dynamic> data = {"rated": rated, "color": color.text};
 
     if (time != null) {
-      data["clock.limit"] = time.time.inMinutes;
+      data["clock.limit"] = time.time.inSeconds;
       data["clock.increment"] = time.increment.inSeconds;
     }
 
@@ -293,7 +296,7 @@ class Lichess extends ChessPlatform {
         contentType: ContentType("application", "x-www-form-urlencoded",
             charset: "utf-8"),
         body: body);
-
+    _logRequest(request, body: body);
     final responseJson = await parseResponseJSON(await request.close());
     return LichessChallengeResult.fromJson(responseJson);
   }
@@ -307,7 +310,7 @@ class Lichess extends ChessPlatform {
     Map<String, dynamic> data = {"rated": rated, "color": color.text};
 
     if (time != null) {
-      data["clock.limit"] = time.time.inMinutes;
+      data["clock.limit"] = time.time.inSeconds;
       data["clock.increment"] = time.increment.inSeconds;
     }
 
@@ -316,7 +319,7 @@ class Lichess extends ChessPlatform {
         contentType: ContentType("application", "x-www-form-urlencoded",
             charset: "utf-8"),
         body: body);
-
+    _logRequest(request, body: body);
     final responseJson = await parseResponseJSON(await request.close());
     return LichessChallengeResult.fromJson(responseJson);
   }
@@ -328,7 +331,7 @@ class Lichess extends ChessPlatform {
         "/api/board/game/$gameId/move/$uciMove",
         contentType: ContentType("application", "json", charset: "utf-8"),
         body: body);
-
+    _logRequest(request, body: body);
     final responseJson = await parseResponseJSON(await request.close());
     return responseJson["ok"];
   }
@@ -340,7 +343,7 @@ class Lichess extends ChessPlatform {
         contentType: ContentType("application", "x-www-form-urlencoded",
             charset: "utf-8"),
         body: body);
-
+    _logRequest(request, body: body);
     final responseJson = await parseResponseJSON(await request.close());
     return responseJson["ok"];
   }
@@ -348,6 +351,7 @@ class Lichess extends ChessPlatform {
   Future<bool> abortGame(String gameId) async {
     final request = await createPostRequest("/api/board/game/$gameId/abort",
         contentType: null);
+    _logRequest(request);
     final responseJson = await parseResponseJSON(await request.close());
     return responseJson["ok"];
   }
@@ -355,6 +359,7 @@ class Lichess extends ChessPlatform {
   Future<bool> resignGame(String gameId) async {
     final request = await createPostRequest("/api/board/game/$gameId/resign",
         contentType: null);
+    _logRequest(request);
     final responseJson = await parseResponseJSON(await request.close());
     return responseJson["ok"];
   }
@@ -363,6 +368,7 @@ class Lichess extends ChessPlatform {
     final request = await createPostRequest(
         "/api/board/game/$gameId/draw/" + (accept ? "yes" : "no"),
         contentType: null);
+    _logRequest(request);
     final responseJson = await parseResponseJSON(await request.close());
     return responseJson["ok"];
   }
@@ -372,6 +378,7 @@ class Lichess extends ChessPlatform {
     final request = await createPostRequest(
         "/api/challenge/$challengeId/accept",
         contentType: null);
+    _logRequest(request);
     final responseJson = await parseResponseJSON(await request.close());
     
     if (!responseJson["ok"]) {
@@ -409,6 +416,7 @@ class Lichess extends ChessPlatform {
     final request = await createPostRequest(
         "/api/challenge/$challengeId/decline",
         contentType: null);
+    _logRequest(request);
     final responseJson = await parseResponseJSON(await request.close());
     
     if (!responseJson["ok"]) {
@@ -421,6 +429,7 @@ class Lichess extends ChessPlatform {
     final request = await createPostRequest(
         "/api/challenge/$challengeId/cancel",
         contentType: null);
+    _logRequest(request);
     final responseJson = await parseResponseJSON(await request.close());
 
     if (!responseJson["ok"]) {
@@ -434,7 +443,7 @@ class Lichess extends ChessPlatform {
         contentType: ContentType("application", "x-www-form-urlencoded",
             charset: "utf-8"),
         body: body);
-
+    _logRequest(request, body: body);
     final responseJson = await parseResponseJSON(await request.close());
     return LichessGameImportResult.fromJson(responseJson);
   }
@@ -447,16 +456,12 @@ class Lichess extends ChessPlatform {
       ChessRatingRange? ratingRange}) async {
 
     late StreamSubscription eventListener;
-    ChessPlatformGame? startedGame;
+   Completer<ChessPlatformGame> gameCompleter = Completer<ChessPlatformGame>();
 
     eventListener = _stateController.state.stream.listen((e) {
-
-      // debugging
-      e.runningGames.forEach((e) {print(e.info.source);});
-
       final games = e.runningGames.where((LichessGame e) => e.info.source == "lobby");
       if (games.isNotEmpty) {
-        startedGame = games.first;
+        gameCompleter.complete(games.first);
         eventListener.cancel();
       }
     });
@@ -465,17 +470,7 @@ class Lichess extends ChessPlatform {
         (await getSeekStream(rated: rated, time: time, color: color))
             .listen((_) {});
 
-    return CancelableOperation.fromFuture(Future(() async {
-      await seekListener.asFuture();
-      await eventListener.asFuture();
-
-      ChessPlatformGame? lStartedGame = startedGame;
-      if (lStartedGame == null) {
-        throw Exception("Game not started");
-      }
-
-      return lStartedGame;
-    }), onCancel: () {
+    return CancelableOperation.fromFuture(gameCompleter.future, onCancel: () {
       seekListener.cancel();
       eventListener.cancel();
     });
@@ -490,9 +485,7 @@ class Lichess extends ChessPlatform {
   }) async {
 
     late StreamSubscription eventListener;
-
-    ChessPlatformGame? startedGame;
-    ChessPlatformException? exception;
+    Completer<ChessPlatformGame> gameCompleter = Completer<ChessPlatformGame>();
 
     final challenge = await createNewChallenge(userId,
         rated: rated, time: time, color: color);
@@ -500,33 +493,21 @@ class Lichess extends ChessPlatform {
     eventListener = _stateController.state.stream.listen((e) {
       final games = e.runningGames.where((LichessGame e) => e.id == challenge.getChallengeId());
       if (games.isNotEmpty) {
-        startedGame = games.first;
+        gameCompleter.complete(games.first);
         eventListener.cancel();
         return;
       }
 
-      if (e.openChallenges.any((e) => e.id == challenge.getChallengeId())) {
-        exception = ChessPlatformChallengeDeclined();
+      if (!e.openChallenges.any((e) => e.id == challenge.getChallengeId())) {
+        gameCompleter.completeError(ChessPlatformChallengeDeclined());
         eventListener.cancel();
         return;
       }
     });
 
-    return ChallengeRequest(CancelableOperation.fromFuture(Future(() async {
-      await eventListener.asFuture();
-      
-      ChessPlatformException? lexception = exception;
-      if (lexception != null) {
-        throw lexception;
-      }
-
-      ChessPlatformGame? lStartedGame = startedGame;
-      if (lStartedGame == null) {
-        throw Exception("Game not started");
-      }
-
-      return lStartedGame;
-    }), onCancel: () async {
+    return ChallengeRequest(CancelableOperation.fromFuture(
+      gameCompleter.future,
+      onCancel: () async {
       await Future.wait([
         eventListener.cancel(),
         cancelChallenge(challenge.getChallengeId())
@@ -627,9 +608,17 @@ class Lichess extends ChessPlatform {
             response, "Failed to parse response json");
       }
     } else if (response.statusCode == 401) {
-      throw ChessPlatformNotAuthorizedException(response, "Not authorized");
+      String text = "";
+      try {
+        text = await response.transform(utf8.decoder).join();
+      } catch (e) {}
+      throw ChessPlatformNotAuthorizedException(response, "Not authorized: " + text);
     } else {
-      throw ChessPlatformHttpException(response, "Failed to retrieve response");
+      String text = "";
+      try {
+        text = await response.transform(utf8.decoder).join();
+      } catch (e) {}
+      throw ChessPlatformHttpException(response, "Failed to retrieve response: " + text);
     }
   }
 
@@ -698,5 +687,23 @@ class Lichess extends ChessPlatform {
       formBody = formBody.substring(0, formBody.length - 1);
     }
     return utf8.encode(formBody);
+  }
+
+  void _logRequest(HttpClientRequest req, { List<int>? body }) {
+    if (logger is DummyLogger) {
+      return;
+    }
+
+    logger.messageOut("[${req.method}] ${req.uri}");
+    req.headers.forEach((key, value) {
+      if (key.toLowerCase() == "authorization") {
+        logger.messageOut(" > Header: $key: ********");
+        return;
+      }
+      logger.messageOut(" > Header: $key: $value");
+    });
+    if (body != null) {
+      logger.messageOut(" > Body: ${utf8.decode(body)}");
+    }
   }
 }

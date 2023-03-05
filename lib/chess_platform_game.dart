@@ -27,4 +27,28 @@ abstract class ChessPlatformGame {
   /// The current state of the game
   ChessGameState getState();
 
+  /// Reconnect to the game
+  Future<void> reconnect();
+
+  /// Make a move
+  Future<void> move(String move);
+
+  /// Accept a draw offer
+  Future<void> acceptDraw();
+
+  /// Decline a draw offer
+  Future<void> declineDraw();
+
+  /// Offer a draw
+  Future<void> offerDraw();
+
+  /// Resign the game
+  Future<void> resign();
+
+  /// Send a chat message
+  Future<void> sendMessage(String message);
+
+  /// Dispose close all connections
+  void dispose();
+
 }

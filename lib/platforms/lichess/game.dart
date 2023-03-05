@@ -2,14 +2,24 @@ import 'dart:async';
 
 import 'package:chess_cloud_provider/chess_game_state.dart';
 import 'package:chess_cloud_provider/chess_platform_game.dart';
+import 'package:chess_cloud_provider/exceptions/chess_platform_connection_error.dart';
+import 'package:chess_cloud_provider/exceptions/chess_platform_illegal_game_action.dart';
+import 'package:chess_cloud_provider/models/chess_game_connection_state.dart';
 import 'package:chess_cloud_provider/platforms/lichess/lichess.dart';
 import 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event_opponent_gone.dart';
 import 'package:chess_cloud_provider/platforms/lichess/utils.dart';
 
 class LichessGame extends ChessPlatformGame {
+  final Lichess lichess;
   late final LichessGameInfo info;
 
   late final ChessGameStateController _stateController = ChessGameStateController();
+  
+  StreamSubscription<LichessGameEvent>? gameStreamSub;
+
+  LichessGame({required this.info, required this.lichess}) {
+    _connect();
+  }
 
   @override
   String get id => info.gameId;
@@ -34,15 +44,63 @@ class LichessGame extends ChessPlatformGame {
     return _stateController.state;
   }
 
-  StreamSubscription<LichessGameEvent>? gameStreamSub;
-
-  LichessGame({required this.info, required Lichess lichess}) {
-    _attach(lichess);
+  @override
+  Future<void> acceptDraw() async {
+    if (!(await lichess.handleDrawOffer(id, true))) {
+      throw ChessPlatformIllegalGameAction();
+    }
+  }
+  
+  @override
+  Future<void> declineDraw() async {
+    if (!(await lichess.handleDrawOffer(id, false))) {
+      throw ChessPlatformIllegalGameAction();
+    }
+  }
+  
+  @override
+  Future<void> move(String move) async {
+    if (!(await lichess.makeMove(id, uciMove: move))) {
+      throw ChessPlatformIllegalGameAction();
+    }
+  }
+  
+  @override
+  Future<void> offerDraw() async {
+    if (!(await lichess.handleDrawOffer(id, true))) {
+      throw ChessPlatformIllegalGameAction();
+    }
+  }
+  
+  @override
+  Future<void> resign() async {
+    if (!(await lichess.resignGame(id))) {
+      throw ChessPlatformIllegalGameAction();
+    }
   }
 
-  void _attach(Lichess lichess) async {
-    final gameStream = await lichess.getGameStream(id);
-    gameStreamSub = gameStream.listen(_handleGameEvent);
+  @override
+  Future<void> sendMessage(String message) async {
+    if (!(await lichess.writeInChat(id, message))) {
+      throw ChessPlatformIllegalGameAction();
+    }
+  }
+
+  Future<void> _connect() async {
+    try {
+      _stateController.setConnectionState(ChessGameConnectionState.connecting);
+      final gameStream = await lichess.getGameStream(id);
+      gameStreamSub = gameStream.listen(_handleGameEvent);
+      _stateController.setConnectionState(ChessGameConnectionState.connected);
+    } catch (e) {
+       _stateController.setConnectionState(ChessGameConnectionState.error, connectionError: ChessPlatformConnectionError(e));
+    }
+  }
+
+  @override
+  Future<void> reconnect() async {
+    disconnect();
+    await _connect();
   }
 
   void _handleGameEvent(LichessGameEvent event) {
@@ -82,9 +140,15 @@ class LichessGame extends ChessPlatformGame {
     );
   }
 
-  // ignore: unused_element
-  void dispose() {
+  void disconnect() {
     gameStreamSub?.cancel();
+    gameStreamSub = null;
+    _stateController.setConnectionState(ChessGameConnectionState.disconnected);
+  }
+
+  @override
+  void dispose() {
+    disconnect();
   }
 
 }

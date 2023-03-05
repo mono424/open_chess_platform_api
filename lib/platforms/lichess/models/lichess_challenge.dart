@@ -7,9 +7,7 @@ import 'package:chess_cloud_provider/platforms/lichess/models/lichess_time_contr
 import 'package:chess_cloud_provider/platforms/lichess/models/lichess_variant.dart';
 
 class LichessChallenge extends ChessPlatformChallenge {
-  @override
-  late String id;
-
+  late String lId;
   late String url;
   late String status;
   late LichessChallengParticipant challenger;
@@ -21,8 +19,24 @@ class LichessChallenge extends ChessPlatformChallenge {
   late String color;
   late LichessPerf perf;
 
+  @override
+  get id => lId;
+
+  @override
+  get senderId => challenger.id;
+  
+  @override
+  String get senderName => challenger.name;
+  
+  @override
+  get receiverId => destUser.id;
+  
+  @override
+  String get receiverName => destUser.name;
+
+
   LichessChallenge(
-      {required this.id,
+      {required this.lId,
       required this.url,
       required this.status,
       required this.challenger,
@@ -35,7 +49,7 @@ class LichessChallenge extends ChessPlatformChallenge {
       required this.perf});
 
   LichessChallenge.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    lId = json['id'];
     url = json['url'];
     status = json['status'];
     challenger = LichessChallengParticipant.fromJson(json['challenger']);
@@ -50,7 +64,7 @@ class LichessChallenge extends ChessPlatformChallenge {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
-    data['id'] = id;
+    data['id'] = lId;
     data['url'] = url;
     data['status'] = status;
     data['challenger'] = challenger.toJson();
@@ -63,4 +77,5 @@ class LichessChallenge extends ChessPlatformChallenge {
     data['perf'] = perf.toJson();
     return data;
   }
+  
 }

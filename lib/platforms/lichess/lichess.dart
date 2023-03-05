@@ -5,8 +5,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:async/async.dart';
+import 'package:chess_cloud_provider/chess_platform_exception.dart';
+import 'package:chess_cloud_provider/exceptions/chess_platform_challenge_declined.dart';
+import 'package:chess_cloud_provider/exceptions/chess_platform_connection_error.dart';
+import 'package:chess_cloud_provider/exceptions/chess_platform_illegal_action.dart';
+import 'package:chess_cloud_provider/exceptions/chess_platform_timeout.dart';
 import 'package:chess_cloud_provider/models/challenge_request.dart';
 import 'package:chess_cloud_provider/chess_platform_logger.dart';
+import 'package:chess_cloud_provider/models/chess_platform_auth_state.dart';
+import 'package:chess_cloud_provider/models/chess_platform_connection_state.dart';
 import 'package:chess_cloud_provider/platforms/lichess/game.dart';
 import 'package:flutter/widgets.dart';
 import 'package:chess_cloud_provider/chess_platform_challenge.dart';
@@ -125,24 +132,32 @@ class Lichess extends ChessPlatform {
     if (credentials is ChessPlatformCredentialsToken) {
       token = credentials.token;
       try {
-        _stateController.setUser(await getAccount());
+         _stateController.setAuthenticated(ChessPlatformAuthState.loading);
+        final account = await getAccount();
+        _stateController.setAuthenticated(ChessPlatformAuthState.authenticated);
+        _stateController.setUser(account);
         await setupState();
       } catch (e) {
-        throw ChessPlatformCredentialsInvalid();
+        final err = ChessPlatformCredentialsInvalid();
+        _stateController.setAuthenticated(ChessPlatformAuthState.error, authenticationError: err);
+        throw err;
       }
     } else {
-      throw ChessPlatformCredentialsUnsupported();
+      final err = ChessPlatformCredentialsUnsupported();
+      _stateController.setAuthenticated(ChessPlatformAuthState.error, authenticationError: err);
+      throw err;
     }
   }
 
   @override
   bool hasAuth() {
-    return token != null;
+    return _stateController.state.auth == ChessPlatformAuthState.authenticated;
   }
 
   @override
   Future<void> deauthenticate() async {
     token = null;
+    _stateController.setAuthenticated(ChessPlatformAuthState.unauthenticated);
     _stateController.setUser(null);
     disposeState();
   }
@@ -344,7 +359,7 @@ class Lichess extends ChessPlatform {
     return responseJson["ok"];
   }
 
-  Future<bool> respondToDrawOffer(String gameId, bool accept) async {
+  Future<bool> handleDrawOffer(String gameId, bool accept) async {
     final request = await createPostRequest(
         "/api/board/game/$gameId/draw/" + (accept ? "yes" : "no"),
         contentType: null);
@@ -352,28 +367,65 @@ class Lichess extends ChessPlatform {
     return responseJson["ok"];
   }
 
-  Future<bool> acceptChallenge(String challengeId) async {
+  @override
+  Future<ChessPlatformGame> acceptChallenge(String challengeId) async {
     final request = await createPostRequest(
         "/api/challenge/$challengeId/accept",
         contentType: null);
     final responseJson = await parseResponseJSON(await request.close());
-    return responseJson["ok"];
+    
+    if (!responseJson["ok"]) {
+      throw ChessPlatformIllegalAction();
+    }
+
+    late StreamSubscription eventListener;
+    ChessPlatformGame? startedGame;
+
+    eventListener = _stateController.state.stream.listen((e) {
+      final games = e.runningGames.where((LichessGame e) => e.id == challengeId);
+      if (games.isNotEmpty) {
+        startedGame = games.first;
+        eventListener.cancel();
+        return;
+      }
+    });
+
+    await Future.any([
+      eventListener.asFuture(),
+      Future.delayed(const Duration(seconds: 10))
+    ]);
+
+    ChessPlatformGame? lStartedGame = startedGame;
+    if (lStartedGame == null) {
+      eventListener.cancel();
+      throw ChessPlatformTimeout();
+    }
+
+    return lStartedGame;
   }
 
-  Future<bool> declineChallenge(String challengeId) async {
+  @override
+  Future<void> declineChallenge(String challengeId) async {
     final request = await createPostRequest(
         "/api/challenge/$challengeId/decline",
         contentType: null);
     final responseJson = await parseResponseJSON(await request.close());
-    return responseJson["ok"];
+    
+    if (!responseJson["ok"]) {
+      throw ChessPlatformIllegalAction();
+    }
   }
 
-  Future<bool> cancelChallenge(String challengeId) async {
+  @override
+  Future<void> cancelChallenge(String challengeId) async {
     final request = await createPostRequest(
         "/api/challenge/$challengeId/cancel",
         contentType: null);
     final responseJson = await parseResponseJSON(await request.close());
-    return responseJson["ok"];
+
+    if (!responseJson["ok"]) {
+      throw ChessPlatformIllegalAction();
+    }
   }
 
   Future<LichessGameImportResult> import(String pgn) async {
@@ -394,8 +446,9 @@ class Lichess extends ChessPlatform {
       ChessColor color = ChessColor.random,
       ChessRatingRange? ratingRange}) async {
 
-    ChessPlatformGame? startedGame;
     late StreamSubscription eventListener;
+    ChessPlatformGame? startedGame;
+
     eventListener = _stateController.state.stream.listen((e) {
 
       // debugging
@@ -435,8 +488,11 @@ class Lichess extends ChessPlatform {
     required TimeOption time,
     ChessColor color = ChessColor.random,
   }) async {
-    ChessPlatformGame? startedGame;
+
     late StreamSubscription eventListener;
+
+    ChessPlatformGame? startedGame;
+    ChessPlatformException? exception;
 
     final challenge = await createNewChallenge(userId,
         rated: rated, time: time, color: color);
@@ -446,11 +502,23 @@ class Lichess extends ChessPlatform {
       if (games.isNotEmpty) {
         startedGame = games.first;
         eventListener.cancel();
+        return;
+      }
+
+      if (e.openChallenges.any((e) => e.id == challenge.getChallengeId())) {
+        exception = ChessPlatformChallengeDeclined();
+        eventListener.cancel();
+        return;
       }
     });
 
     return ChallengeRequest(CancelableOperation.fromFuture(Future(() async {
       await eventListener.asFuture();
+      
+      ChessPlatformException? lexception = exception;
+      if (lexception != null) {
+        throw lexception;
+      }
 
       ChessPlatformGame? lStartedGame = startedGame;
       if (lStartedGame == null) {
@@ -497,13 +565,20 @@ class Lichess extends ChessPlatform {
       _eventStreamSub!.cancel();
       _eventStream = null;
       _eventStreamSub = null;
+      _stateController.setConnectionState(ChessPlatformConnectionState.disconnected);
     }
   }
 
   Future<void> setupState() async {
     disposeState();
-    _eventStream = await openEventStream();
-    _eventStreamSub = _eventStream!.listen(handleEvent);
+    _stateController.setConnectionState(ChessPlatformConnectionState.connecting);
+    try {
+      _eventStream = await openEventStream();
+      _eventStreamSub = _eventStream!.listen(handleEvent);
+      _stateController.setConnectionState(ChessPlatformConnectionState.connected);
+    } catch (e) {
+      _stateController.setConnectionState(ChessPlatformConnectionState.error, connectionError: ChessPlatformConnectionError(e));
+    }
   }
 
   void handleEvent(LichessEvent event) {

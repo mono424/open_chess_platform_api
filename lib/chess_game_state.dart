@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:chess_cloud_provider/chess_platform_exception.dart';
 import 'package:chess_cloud_provider/models/chat_message.dart';
 import 'package:chess_cloud_provider/models/chess_color.dart';
+import 'package:chess_cloud_provider/models/chess_game_connection_state.dart';
 import 'package:chess_cloud_provider/models/game_status.dart';
 
 class ChessGameState {
@@ -34,6 +36,15 @@ class ChessGameState {
   Stream<ChessGameState> get stream {
     return _stream;
   }
+
+  // Connection State
+  ChessGameConnectionState connectionState = ChessGameConnectionState.disconnected;
+  ChessPlatformException? connectionError;
+
+
+  // Convinience Methods
+  Duration whiteTimeLeft(bool isRunning) => isRunning ? (whiteTime - (DateTime.now().difference(timeBase))) : whiteTime;
+  Duration blackTimeLeft(bool isRunning) => isRunning ? (blackTime - (DateTime.now().difference(timeBase))) : blackTime;
 }
 
 class ChessGameStateController {
@@ -77,6 +88,12 @@ class ChessGameStateController {
   void updateOpponentOnline(bool online, {DateTime? claimWinAt}) {
     state.opponentOnline = online;
     state.claimWinAt = claimWinAt ?? DateTime(0);
+    _notify();
+  }
+
+  void setConnectionState(ChessGameConnectionState connectionState, { ChessPlatformException? connectionError }) {
+    state.connectionState = connectionState;
+    state.connectionError = connectionError;
     _notify();
   }
 

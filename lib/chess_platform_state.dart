@@ -1,14 +1,22 @@
 import 'dart:async';
 
 import 'package:chess_cloud_provider/chess_platform_challenge.dart';
+import 'package:chess_cloud_provider/chess_platform_exception.dart';
 import 'package:chess_cloud_provider/chess_platform_game.dart';
 import 'package:chess_cloud_provider/chess_platform_user.dart';
+import 'package:chess_cloud_provider/models/chess_platform_auth_state.dart';
+import 'package:chess_cloud_provider/models/chess_platform_connection_state.dart';
 
 class ChessPlatformState<U extends ChessPlatformUser,
     G extends ChessPlatformGame, C extends ChessPlatformChallenge> {
-  U? user;
+
   final Stream<ChessPlatformState<U, G, C>> _stream;
 
+  U? user;
+  ChessPlatformConnectionState connectionState = ChessPlatformConnectionState.disconnected;
+  ChessPlatformException? connectionError;
+  ChessPlatformAuthState auth = ChessPlatformAuthState.unauthenticated;
+  ChessPlatformException? authError;
   List<G> runningGames = [];
   List<C> openChallenges = [];
 
@@ -28,6 +36,18 @@ class ChessPlatformStateController<U extends ChessPlatformUser,
       ChessPlatformState<U, G, C>(_streamController.stream.asBroadcastStream());
 
   ChessPlatformStateController();
+
+  void setAuthenticated(ChessPlatformAuthState authenticated, { ChessPlatformException? authenticationError }) {
+    state.auth = authenticated;
+    state.authError = authenticationError;
+    _notify();
+  }
+
+  void setConnectionState(ChessPlatformConnectionState connectionState, { ChessPlatformException? connectionError }) {
+    state.connectionState = connectionState;
+    state.connectionError = connectionError;
+    _notify();
+  }
 
   void setUser(U? user) {
     state.user = user;

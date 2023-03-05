@@ -36,10 +36,18 @@ abstract class ChessPlatform {
   /// Deauthenticate the current user.
   Future<void> deauthenticate();
 
-  // Gets friend list filtered by the query.
+  /// Gets friend list filtered by the query.
   Future<List<ChessPlatformUser>> getFriend(String query);
 
-  // Challenge an other user.
+  /// Seeks a random oppoent and starts a new game
+  Future<CancelableOperation<ChessPlatformGame>> seekGame({
+    bool rated = false,
+    required TimeOption time,
+    ChessColor color = ChessColor.random,
+    ChessRatingRange? ratingRange,
+  });
+
+  /// Challenge an other user.
   Future<ChallengeRequest> createChallenge(
     String userId, {
     bool rated = false,
@@ -47,11 +55,13 @@ abstract class ChessPlatform {
     ChessColor color = ChessColor.random,
   });
 
-  // Seeks a random oppoent and starts a new game
-  Future<CancelableOperation<ChessPlatformGame>> seekGame({
-    bool rated = false,
-    required TimeOption time,
-    ChessColor color = ChessColor.random,
-    ChessRatingRange? ratingRange,
-  });
+  /// Accepts a challenge and starts a new game
+  Future<ChessPlatformGame> acceptChallenge(String challengeId);
+
+  /// Declines a challenge
+  Future<void> declineChallenge(String challengeId);
+
+  /// Cancel a challenge
+  Future<void> cancelChallenge(String challengeId);
+
 }

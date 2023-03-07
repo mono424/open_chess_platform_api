@@ -1,6 +1,18 @@
 import 'package:chess_cloud_provider/models/game_status.dart';
 import 'package:chess_cloud_provider/platforms/lichess/lichess.dart';
 
+Future<T> retryAsync<T>(Future<T> Function() fn, { required int retries, required Duration retryDelay }) async {
+    try {
+      return await fn();
+    } catch (e) {
+      if (retries > 0) {
+        await Future.delayed(retryDelay);
+        return retryAsync(fn, retries: retries - 1, retryDelay: retryDelay);
+      }
+      rethrow;
+    }
+}
+
 GameTimeType parseSpeed(String speed) {
   switch (speed.toLowerCase()) {
     case "bullet":

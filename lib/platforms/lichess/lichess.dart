@@ -14,6 +14,7 @@ import 'package:chess_cloud_provider/chess_platform_logger.dart';
 import 'package:chess_cloud_provider/models/chess_platform_auth_state.dart';
 import 'package:chess_cloud_provider/models/chess_platform_connection_state.dart';
 import 'package:chess_cloud_provider/platforms/lichess/game.dart';
+import 'package:chess_cloud_provider/platforms/lichess/utils.dart';
 import 'package:flutter/widgets.dart';
 import 'package:chess_cloud_provider/chess_platform_challenge.dart';
 import 'package:chess_cloud_provider/chess_platform_credentials.dart';
@@ -198,26 +199,255 @@ class Lichess extends ChessPlatform {
   //  d8888888888 888         888
   // d88P     888 888       8888888
 
-  Future<LichessAccount> getAccount() async {
-    final request = await createGetRequest("/api/account");
-    _logRequest(request);
-    final response = await request.close();
-    final responseJson = await parseResponseJSON(response);
-    return LichessAccount.fromJson(responseJson);
+  Future<LichessAccount> getAccount({ int? retries, Duration? retryDelay }) async {
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
+
+    return retryAsync<LichessAccount>(() async {
+      final request = await createGetRequest("/api/account");
+      _logRequest(request);
+      final response = await request.close();
+      final responseJson = await parseResponseJSON(response);
+      return LichessAccount.fromJson(responseJson);
+    }, retries: retriesVal, retryDelay: retryDelayVal);
   }
 
-  Future<List<LichessUser>> getFollowing() async {
-    final request = await createGetRequest("/api/rel/following");
-    _logRequest(request);
-    final response = await request.close();
-    final responseText = await getResponseText(response);
+  Future<List<LichessUser>> getFollowing({ int? retries, Duration? retryDelay }) async {
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
 
-    return responseText
-        .split("\n")
-        .where((element) => element.length > 1)
-        .map((item) => LichessUser.fromJson(jsonDecode(item)))
-        .toList();
+    return retryAsync<List<LichessUser>>(() async {
+      final request = await createGetRequest("/api/rel/following");
+      _logRequest(request);
+      final response = await request.close();
+      final responseText = await getResponseText(response);
+
+      return responseText
+          .split("\n")
+          .where((element) => element.length > 1)
+          .map((item) => LichessUser.fromJson(jsonDecode(item)))
+          .toList();
+    }, retries: retriesVal, retryDelay: retryDelayVal);
   }
+
+  Future<LichessChallengeResult> createOpenChallenge({
+    bool rated = false,
+    TimeOption? time,
+    ChessColor color = ChessColor.random,
+    int? retries,
+    Duration? retryDelay,
+  }) async {
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
+
+    Map<String, dynamic> data = {"rated": rated, "color": color.text};
+    if (time != null) {
+      data["clock.limit"] = time.time.inSeconds;
+      data["clock.increment"] = time.increment.inSeconds;
+    }
+
+    final body = createFormBody(data);
+
+    return retryAsync<LichessChallengeResult>(() async {
+      final request = await createPostRequest("/api/challenge/open",
+          contentType: ContentType("application", "x-www-form-urlencoded",
+              charset: "utf-8"),
+          body: body);
+      _logRequest(request, body: body);
+      final responseJson = await parseResponseJSON(await request.close());
+      return LichessChallengeResult.fromJson(responseJson);
+    }, retries: retriesVal, retryDelay: retryDelayVal);
+  }
+
+  Future<LichessChallengeResult> createNewChallenge(
+    String userId, {
+    bool rated = false,
+    TimeOption? time,
+    ChessColor color = ChessColor.random,
+    int? retries,
+    Duration? retryDelay,
+  }) async {
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
+
+    Map<String, dynamic> data = {"rated": rated, "color": color.text};
+    if (time != null) {
+      data["clock.limit"] = time.time.inSeconds;
+      data["clock.increment"] = time.increment.inSeconds;
+    }
+
+    final body = createFormBody(data);
+
+    return retryAsync<LichessChallengeResult>(() async {
+      final request = await createPostRequest("/api/challenge/$userId",
+          contentType: ContentType("application", "x-www-form-urlencoded",
+              charset: "utf-8"),
+          body: body);
+      _logRequest(request, body: body);
+      final responseJson = await parseResponseJSON(await request.close());
+      return LichessChallengeResult.fromJson(responseJson);
+    }, retries: retriesVal, retryDelay: retryDelayVal);
+  }
+
+  Future<bool> makeMove(String gameId, { String uciMove = "", bool offerDraw = false, int? retries, Duration? retryDelay }) async {
+    final body = createFormBody({"offeringDraw": offerDraw});
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
+
+    return retryAsync<bool>(() async {
+      final request = await createPostRequest(
+        "/api/board/game/$gameId/move/$uciMove",
+        contentType: ContentType("application", "json", charset: "utf-8"),
+        body: body
+      );
+      _logRequest(request, body: body);
+      final responseJson = await parseResponseJSON(await request.close());
+      return responseJson["ok"];
+    }, retries: retriesVal, retryDelay: retryDelayVal);
+  }
+
+  Future<bool> writeInChat(String gameId, String text, { String room = "player", int? retries, Duration? retryDelay }) async {
+    final body = createFormBody({"room": room, "text": text});
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
+
+    return retryAsync<bool>(() async {
+      final request = await createPostRequest("/api/board/game/$gameId/chat",
+        contentType: ContentType("application", "x-www-form-urlencoded",
+            charset: "utf-8"),
+        body: body);
+      _logRequest(request, body: body);
+      final responseJson = await parseResponseJSON(await request.close());
+      return responseJson["ok"];
+    }, retries: retriesVal, retryDelay: retryDelayVal);
+  }
+
+  Future<bool> abortGame(String gameId, { int? retries, Duration? retryDelay }) async {
+    final request = await createPostRequest("/api/board/game/$gameId/abort", contentType: null);
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
+
+    return retryAsync<bool>(() async {
+      _logRequest(request);
+      final responseJson = await parseResponseJSON(await request.close());
+      return responseJson["ok"];
+    }, retries: retriesVal, retryDelay: retryDelayVal);
+  }
+
+  Future<bool> resignGame(String gameId, { int? retries, Duration? retryDelay }) async {
+    final request = await createPostRequest("/api/board/game/$gameId/resign", contentType: null);
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
+
+    return retryAsync<bool>(() async {
+      _logRequest(request);
+      final responseJson = await parseResponseJSON(await request.close());
+      return responseJson["ok"];
+    }, retries: retriesVal, retryDelay: retryDelayVal);
+  }
+
+  Future<bool> handleDrawOffer(String gameId, bool accept, { int? retries, Duration? retryDelay }) async {
+    final request = await createPostRequest("/api/board/game/$gameId/draw/" + (accept ? "yes" : "no"), contentType: null);
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
+
+    return retryAsync<bool>(() async {
+      _logRequest(request);
+      final responseJson = await parseResponseJSON(await request.close());
+      return responseJson["ok"];
+    }, retries: retriesVal, retryDelay: retryDelayVal);
+  }
+
+  @override
+  Future<ChessPlatformGame> acceptChallenge(String challengeId, { int? retries, Duration? retryDelay }) async {
+    final request = await createPostRequest("/api/challenge/$challengeId/accept", contentType: null);
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
+
+    return retryAsync<ChessPlatformGame>(() async {
+      _logRequest(request);
+      final responseJson = await parseResponseJSON(await request.close());
+      
+      if (!responseJson["ok"]) {
+        throw ChessPlatformIllegalAction();
+      }
+
+      late StreamSubscription eventListener;
+      ChessPlatformGame? startedGame;
+
+      eventListener = _stateController.state.stream.listen((e) {
+        final games = e.runningGames.where((LichessGame e) => e.id == challengeId);
+        if (games.isNotEmpty) {
+          startedGame = games.first;
+          eventListener.cancel();
+          return;
+        }
+      });
+
+      await Future.any([
+        eventListener.asFuture(),
+        Future.delayed(const Duration(seconds: 10))
+      ]);
+
+      ChessPlatformGame? lStartedGame = startedGame;
+      if (lStartedGame == null) {
+        eventListener.cancel();
+        throw ChessPlatformTimeout();
+      }
+
+      return lStartedGame;
+    }, retries: retriesVal, retryDelay: retryDelayVal);
+  }
+
+  @override
+  Future<void> declineChallenge(String challengeId, { int? retries, Duration? retryDelay }) async {
+    final request = await createPostRequest("/api/challenge/$challengeId/decline", contentType: null);
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
+
+    return retryAsync<void>(() async {
+      _logRequest(request);
+      final responseJson = await parseResponseJSON(await request.close());
+      
+      if (!responseJson["ok"]) {
+        throw ChessPlatformIllegalAction();
+      }
+    }, retries: retriesVal, retryDelay: retryDelayVal);
+  }
+
+  @override
+  Future<void> cancelChallenge(String challengeId, { int? retries, Duration? retryDelay }) async {
+    final request = await createPostRequest("/api/challenge/$challengeId/cancel", contentType: null);
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
+
+    return retryAsync<void>(() async {
+      _logRequest(request);
+      final responseJson = await parseResponseJSON(await request.close());
+
+      if (!responseJson["ok"]) {
+        throw ChessPlatformIllegalAction();
+      }
+    }, retries: retriesVal, retryDelay: retryDelayVal);
+  }
+
+  Future<LichessGameImportResult> import(String pgn, { int? retries, Duration? retryDelay }) async {
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
+    
+    return retryAsync<LichessGameImportResult>(() async {
+      final body = createFormBody({"pgn": pgn});
+      final request = await createPostRequest("/api/import",
+          contentType: ContentType("application", "x-www-form-urlencoded",
+              charset: "utf-8"),
+          body: body);
+      _logRequest(request, body: body);
+      final responseJson = await parseResponseJSON(await request.close());
+      return LichessGameImportResult.fromJson(responseJson);
+     }, retries: retriesVal, retryDelay: retryDelayVal);
+  }
+
+  /// Stream API
 
   Future<Stream<LichessEvent>> openEventStream() async {
     final request = await createGetRequest("/api/stream/event");
@@ -277,175 +507,6 @@ class Lichess extends ChessPlatform {
         body: body);
     _logRequest(request, body: body);
     return request.close();
-  }
-
-  Future<LichessChallengeResult> createOpenChallenge({
-    bool rated = false,
-    TimeOption? time,
-    ChessColor color = ChessColor.random,
-  }) async {
-    Map<String, dynamic> data = {"rated": rated, "color": color.text};
-
-    if (time != null) {
-      data["clock.limit"] = time.time.inSeconds;
-      data["clock.increment"] = time.increment.inSeconds;
-    }
-
-    final body = createFormBody(data);
-    final request = await createPostRequest("/api/challenge/open",
-        contentType: ContentType("application", "x-www-form-urlencoded",
-            charset: "utf-8"),
-        body: body);
-    _logRequest(request, body: body);
-    final responseJson = await parseResponseJSON(await request.close());
-    return LichessChallengeResult.fromJson(responseJson);
-  }
-
-  Future<LichessChallengeResult> createNewChallenge(
-    String userId, {
-    bool rated = false,
-    TimeOption? time,
-    ChessColor color = ChessColor.random,
-  }) async {
-    Map<String, dynamic> data = {"rated": rated, "color": color.text};
-
-    if (time != null) {
-      data["clock.limit"] = time.time.inSeconds;
-      data["clock.increment"] = time.increment.inSeconds;
-    }
-
-    final body = createFormBody(data);
-    final request = await createPostRequest("/api/challenge/$userId",
-        contentType: ContentType("application", "x-www-form-urlencoded",
-            charset: "utf-8"),
-        body: body);
-    _logRequest(request, body: body);
-    final responseJson = await parseResponseJSON(await request.close());
-    return LichessChallengeResult.fromJson(responseJson);
-  }
-
-  Future<bool> makeMove(String gameId,
-      {String uciMove = "", bool offerDraw = false}) async {
-    final body = createFormBody({"offeringDraw": offerDraw});
-    final request = await createPostRequest(
-        "/api/board/game/$gameId/move/$uciMove",
-        contentType: ContentType("application", "json", charset: "utf-8"),
-        body: body);
-    _logRequest(request, body: body);
-    final responseJson = await parseResponseJSON(await request.close());
-    return responseJson["ok"];
-  }
-
-  Future<bool> writeInChat(String gameId, String text,
-      {String room = "player"}) async {
-    final body = createFormBody({"room": room, "text": text});
-    final request = await createPostRequest("/api/board/game/$gameId/chat",
-        contentType: ContentType("application", "x-www-form-urlencoded",
-            charset: "utf-8"),
-        body: body);
-    _logRequest(request, body: body);
-    final responseJson = await parseResponseJSON(await request.close());
-    return responseJson["ok"];
-  }
-
-  Future<bool> abortGame(String gameId) async {
-    final request = await createPostRequest("/api/board/game/$gameId/abort",
-        contentType: null);
-    _logRequest(request);
-    final responseJson = await parseResponseJSON(await request.close());
-    return responseJson["ok"];
-  }
-
-  Future<bool> resignGame(String gameId) async {
-    final request = await createPostRequest("/api/board/game/$gameId/resign",
-        contentType: null);
-    _logRequest(request);
-    final responseJson = await parseResponseJSON(await request.close());
-    return responseJson["ok"];
-  }
-
-  Future<bool> handleDrawOffer(String gameId, bool accept) async {
-    final request = await createPostRequest(
-        "/api/board/game/$gameId/draw/" + (accept ? "yes" : "no"),
-        contentType: null);
-    _logRequest(request);
-    final responseJson = await parseResponseJSON(await request.close());
-    return responseJson["ok"];
-  }
-
-  @override
-  Future<ChessPlatformGame> acceptChallenge(String challengeId) async {
-    final request = await createPostRequest(
-        "/api/challenge/$challengeId/accept",
-        contentType: null);
-    _logRequest(request);
-    final responseJson = await parseResponseJSON(await request.close());
-    
-    if (!responseJson["ok"]) {
-      throw ChessPlatformIllegalAction();
-    }
-
-    late StreamSubscription eventListener;
-    ChessPlatformGame? startedGame;
-
-    eventListener = _stateController.state.stream.listen((e) {
-      final games = e.runningGames.where((LichessGame e) => e.id == challengeId);
-      if (games.isNotEmpty) {
-        startedGame = games.first;
-        eventListener.cancel();
-        return;
-      }
-    });
-
-    await Future.any([
-      eventListener.asFuture(),
-      Future.delayed(const Duration(seconds: 10))
-    ]);
-
-    ChessPlatformGame? lStartedGame = startedGame;
-    if (lStartedGame == null) {
-      eventListener.cancel();
-      throw ChessPlatformTimeout();
-    }
-
-    return lStartedGame;
-  }
-
-  @override
-  Future<void> declineChallenge(String challengeId) async {
-    final request = await createPostRequest(
-        "/api/challenge/$challengeId/decline",
-        contentType: null);
-    _logRequest(request);
-    final responseJson = await parseResponseJSON(await request.close());
-    
-    if (!responseJson["ok"]) {
-      throw ChessPlatformIllegalAction();
-    }
-  }
-
-  @override
-  Future<void> cancelChallenge(String challengeId) async {
-    final request = await createPostRequest(
-        "/api/challenge/$challengeId/cancel",
-        contentType: null);
-    _logRequest(request);
-    final responseJson = await parseResponseJSON(await request.close());
-
-    if (!responseJson["ok"]) {
-      throw ChessPlatformIllegalAction();
-    }
-  }
-
-  Future<LichessGameImportResult> import(String pgn) async {
-    final body = createFormBody({"pgn": pgn});
-    final request = await createPostRequest("/api/import",
-        contentType: ContentType("application", "x-www-form-urlencoded",
-            charset: "utf-8"),
-        body: body);
-    _logRequest(request, body: body);
-    final responseJson = await parseResponseJSON(await request.close());
-    return LichessGameImportResult.fromJson(responseJson);
   }
 
   @override
@@ -514,6 +575,8 @@ class Lichess extends ChessPlatform {
       ]);
     }), challenge.getChallengeId());
   }
+
+  /// Convience
 
   @override
   Future<List<ChessPlatformUser>> getFriend(String query) async {

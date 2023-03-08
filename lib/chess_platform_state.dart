@@ -49,6 +49,14 @@ class ChessPlatformStateController<U extends ChessPlatformUser,
     _notify();
   }
 
+  void reset() {
+    state.user = null;
+    state.runningGames = [];
+    state.openChallenges = [];
+    _notify();
+  }
+
+
   void setUser(U? user) {
     state.user = user;
     _notify();

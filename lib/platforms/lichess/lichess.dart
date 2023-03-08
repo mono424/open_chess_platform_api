@@ -167,7 +167,7 @@ class Lichess extends ChessPlatform {
   Future<void> deauthenticate() async {
     token = null;
     _stateController.setAuthenticated(ChessPlatformAuthState.unauthenticated);
-    _stateController.setUser(null);
+    _stateController.reset();
     disposeState();
   }
 

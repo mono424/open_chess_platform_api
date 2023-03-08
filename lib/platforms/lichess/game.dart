@@ -17,7 +17,10 @@ class LichessGame extends ChessPlatformGame {
   
   StreamSubscription<LichessGameEvent>? gameStreamSub;
 
+  late final void Function() _triggerInactivitiyReconnct;
+
   LichessGame({required this.info, required this.lichess}) {
+    _triggerInactivitiyReconnct = debounce(() => reconnect(), duration: lichess.options.streamReconnectInactivityTime);
     _connect();
   }
 
@@ -93,6 +96,7 @@ class LichessGame extends ChessPlatformGame {
       final gameStream = await lichess.getGameStream(id);
       gameStreamSub = gameStream.listen(_handleGameEvent);
       _stateController.setConnectionState(ChessGameConnectionState.connected);
+      _triggerInactivitiyReconnct();
     } catch (e) {
        _stateController.setConnectionState(ChessGameConnectionState.error, connectionError: ChessPlatformConnectionError(e));
     }
@@ -105,6 +109,8 @@ class LichessGame extends ChessPlatformGame {
   }
 
   void _handleGameEvent(LichessGameEvent event) {
+    _triggerInactivitiyReconnct();
+
     if (event is LichessGameEventGameFull) {
       _updateFromState(event.state);
     }
@@ -123,7 +129,12 @@ class LichessGame extends ChessPlatformGame {
   }
 
   void _updateFromState(GameEventState? state) {
-    final moves = state?.moves.split(" ").toList() ?? [];
+    List<String> moves = [];
+    String movesStr = state?.moves ?? "";
+    if (movesStr.isNotEmpty) {
+      moves = movesStr.split(" ").toList();
+    }
+
     _stateController.updateState(
       status: parseStatus(state?.status),
       moves: moves,

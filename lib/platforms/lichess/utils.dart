@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:chess_cloud_provider/models/game_status.dart';
 import 'package:chess_cloud_provider/platforms/lichess/lichess.dart';
 
@@ -11,6 +13,19 @@ Future<T> retryAsync<T>(Future<T> Function() fn, { required int retries, require
       }
       rethrow;
     }
+}
+
+void Function() debounce(void Function() fn, { required Duration duration }) {
+  Timer? timer;
+  
+  return () {
+    if (timer != null) {
+      timer!.cancel();
+    }
+    timer = Timer(duration, () {
+      fn();
+    });
+  };
 }
 
 GameTimeType parseSpeed(String speed) {

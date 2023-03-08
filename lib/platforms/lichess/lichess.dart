@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:async/async.dart';
+import 'package:chess_cloud_provider/exceptions/chess_platform_auth_in_progress.dart';
 import 'package:chess_cloud_provider/exceptions/chess_platform_challenge_declined.dart';
 import 'package:chess_cloud_provider/exceptions/chess_platform_connection_error.dart';
 import 'package:chess_cloud_provider/exceptions/chess_platform_illegal_action.dart';
@@ -129,6 +130,14 @@ class Lichess extends ChessPlatform {
 
   @override
   Future<void> authenticate(ChessPlatformCredentials credentials) async {
+    if (_stateController.state.auth == ChessPlatformAuthState.loading) {
+      throw ChessPlatformAuthInProgress();
+    }
+
+    if (_stateController.state.auth == ChessPlatformAuthState.authenticated) {
+      await deauthenticate();
+    }
+
     if (credentials is ChessPlatformCredentialsToken) {
       token = credentials.token;
       try {

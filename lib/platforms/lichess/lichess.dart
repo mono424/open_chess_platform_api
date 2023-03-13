@@ -497,7 +497,7 @@ class Lichess extends ChessPlatform {
       {bool rated = false,
       required TimeOption time,
       ChessColor color = ChessColor.random,
-      List<int>? ratingRange}) async {
+      ChessRatingRange? ratingRange}) async {
     Map<String, dynamic> data = {
       "rated": rated,
       "color": color.text,
@@ -506,7 +506,7 @@ class Lichess extends ChessPlatform {
     };
 
     if (ratingRange != null) {
-      data["ratingRange"] = ratingRange.join("-");
+      data["ratingRange"] = "${ratingRange.from}-${ratingRange.to}";
     }
 
     final body = createFormBody(data);
@@ -537,7 +537,7 @@ class Lichess extends ChessPlatform {
     });
 
     final seekListener =
-        (await getSeekStream(rated: rated, time: time, color: color))
+        (await getSeekStream(rated: rated, time: time, color: color, ratingRange: ratingRange))
             .listen((_) {});
 
     return CancelableOperation.fromFuture(gameCompleter.future, onCancel: () {

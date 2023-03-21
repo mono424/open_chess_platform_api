@@ -232,9 +232,10 @@ class Lichess extends ChessPlatform {
       final responseText = await getResponseText(response);
 
       return responseText
+          .replaceAll("\r\n", "\\r\\n")
           .split("\n")
           .where((element) => element.length > 1)
-          .map((item) => LichessUser.fromJson(jsonDecode(item)))
+          .map((item) => LichessUser.parseJson(jsonDecode(item)))
           .toList();
     }, retries: retriesVal, retryDelay: retryDelayVal);
   }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:chess_cloud_provider/chess_platform_credentials.dart';
@@ -31,6 +32,16 @@ void main() {
   test('Lichess is initialized right', () {
     final lichess = Lichess(options);
     expect(lichess.options, options);
+  });
+
+  test('Parse complicated friends list', () {
+    final friends = testFriends
+          .replaceAll("\r\n", "\\r\\n")
+          .split("\n")
+          .where((element) => element.length > 1)
+          .map((item) => LichessUser.parseJson(jsonDecode(item)))
+          .toList();
+    expect(friends.length, 52);
   });
 
   group("Lichess Authentication", () {

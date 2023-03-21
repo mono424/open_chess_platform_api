@@ -17,6 +17,7 @@ class LichessUser extends ChessPlatformUser {
   late LichessPlayTime playTime;
   late String language;
   late String url;
+  late bool disabled;
 
   LichessUser(
       {required this.userId,
@@ -27,6 +28,7 @@ class LichessUser extends ChessPlatformUser {
       required this.seenAt,
       required this.playTime,
       required this.language,
+      required this.disabled,
       required this.url});
 
   @override
@@ -51,15 +53,46 @@ class LichessUser extends ChessPlatformUser {
     }
   }
 
+  /// This handles also disabled users
+  static LichessUser parseJson(Map<String, dynamic> json) {
+    final disabled = json["disabled"] ?? false;
+
+    if (disabled) {
+      final userId = (json['id'] != null && json['id'] is String) ? json['id'] : null;
+      final username = json['username'];
+      final url = json['url'];
+      return LichessUser(
+        userId: userId,
+        username: username,
+        url: url,
+        disabled: disabled,
+        online: false,
+        userRatings: LichessUserRatings(
+          blitz: LichessRatingInfo(games: 0, prog: 0, prov: false, rating: 0, rd: 0),
+          bullet: LichessRatingInfo(games: 0, prog: 0, prov: false, rating: 0, rd: 0),
+          classical: LichessRatingInfo(games: 0, prog: 0, prov: false, rating: 0, rd: 0),
+          rapid: LichessRatingInfo(games: 0, prog: 0, prov: false, rating: 0, rd: 0),
+          correspondence: LichessRatingInfo(games: 0, prog: 0, prov: false, rating: 0, rd: 0)
+        ),
+        createdAt: 0,
+        seenAt: 0,
+        playTime: LichessPlayTime(total: 0, tv: 0),
+        language: "",
+      );
+    }
+
+    return LichessUser.fromJson(json);
+  }
+
   LichessUser.fromJson(Map<String, dynamic> json) {
     userId = (json['id'] != null && json['id'] is String) ? json['id'] : null;
     username = json['username'];
-    online = json['online'];
+    online = json['online'] ?? false;
     userRatings = LichessUserRatings.fromJson(json['perfs']);
     createdAt = json['createdAt'];
     seenAt = json['seenAt'];
     playTime = LichessPlayTime.fromJson(json['playTime']);
-    language = json['language'];
+    language = json['language'] ?? "";
     url = json['url'];
   }
 

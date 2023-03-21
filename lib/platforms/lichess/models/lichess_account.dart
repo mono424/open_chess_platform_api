@@ -36,7 +36,8 @@ class LichessAccount extends LichessUser {
             seenAt: seenAt,
             playTime: playTime,
             language: language,
-            url: url);
+            url: url,
+            disabled: false);
 
   LichessAccount.fromJson(Map<String, dynamic> json) : super.fromJson(json) {
     completionRate = json['completionRate'];

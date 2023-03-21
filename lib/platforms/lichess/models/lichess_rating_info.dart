@@ -22,7 +22,7 @@ class LichessRatingInfo {
     rating = json['rating'];
     rd = json['rd'];
     prog = json['prog'];
-    prov = json['prov'];
+    prov = json['prov'] ?? false;
   }
 
   Map<String, dynamic> toJson() {

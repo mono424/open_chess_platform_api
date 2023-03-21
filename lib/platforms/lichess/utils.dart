@@ -36,7 +36,7 @@ GameTimeType parseSpeed(String speed) {
       return GameTimeType.blitz;
     case "rapid":
       return GameTimeType.rapid;
-    case " classical":
+    case "classical":
       return GameTimeType.classical;
     case "correspondence":
       return GameTimeType.correspondence;

@@ -11,15 +11,17 @@ import 'package:chess_cloud_provider/platforms/lichess/utils.dart';
 
 class LichessGame extends ChessPlatformGame {
   final Lichess lichess;
+  
+  late final ChessGameStateController _stateController;
   late final LichessGameInfo info;
 
-  late final ChessGameStateController _stateController = ChessGameStateController();
   
   StreamSubscription<LichessGameEvent>? gameStreamSub;
 
   late final void Function() _triggerInactivitiyReconnct;
 
   LichessGame({required this.info, required this.lichess}) {
+    _stateController = ChessGameStateController();
     _triggerInactivitiyReconnct = debounce(() => reconnect(), duration: lichess.options.streamReconnectInactivityTime);
     _connect();
   }

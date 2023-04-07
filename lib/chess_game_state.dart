@@ -78,11 +78,13 @@ class ChessGameState {
 class ChessGameStateController {
   final StreamController<ChessGameState> _streamController = StreamController();
   final ChessGameStateIntGetter _stateGetter = ChessGameStateIntGetter();
-  late final ChessGameState _state = ChessGameState(_streamController.stream.asBroadcastStream(), _stateGetter);
+  late final ChessGameState _state;
 
   ChessGameState get state => _state;
 
-  ChessGameStateController();
+  ChessGameStateController() {
+    _state = ChessGameState(_streamController.stream.asBroadcastStream(), _stateGetter);
+  }
 
   void updateState({
     required GameStatus status,

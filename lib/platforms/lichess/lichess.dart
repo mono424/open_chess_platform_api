@@ -530,7 +530,7 @@ class Lichess extends ChessPlatform {
    Completer<ChessPlatformGame> gameCompleter = Completer<ChessPlatformGame>();
 
     eventListener = _stateController.state.stream.listen((e) {
-      final games = e.runningGames.where((LichessGame e) => e.info.source == "lobby");
+      final games = e.runningGames.where((LichessGame e) => true/*e.info.source == "lobby"*/);
       if (games.isNotEmpty) {
         gameCompleter.complete(games.first);
         eventListener.cancel();

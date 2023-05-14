@@ -1,3 +1,5 @@
-## 0.0.1
+## 0.0.2
+* Fix: Open new game on seek game
 
-* TODO: Describe initial release.
+## 0.0.1
+* Describe initial release.

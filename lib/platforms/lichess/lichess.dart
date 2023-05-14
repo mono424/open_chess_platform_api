@@ -529,8 +529,9 @@ class Lichess extends ChessPlatform {
     late StreamSubscription eventListener;
    Completer<ChessPlatformGame> gameCompleter = Completer<ChessPlatformGame>();
 
+    final alreadyRunningGames = _stateController.state.runningGames.map((e) => e.id).toList();
     eventListener = _stateController.state.stream.listen((e) {
-      final games = e.runningGames.where((LichessGame e) => true/*e.info.source == "lobby"*/);
+      final games = e.runningGames.where((LichessGame e) => !alreadyRunningGames.contains(e.id));
       if (games.isNotEmpty) {
         gameCompleter.complete(games.first);
         eventListener.cancel();

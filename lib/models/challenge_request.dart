@@ -1,5 +1,5 @@
 import 'package:async/async.dart';
-import 'package:chess_cloud_provider/chess_platform_game.dart';
+import 'package:open_chess_platform_api/chess_platform_game.dart';
 
 class ChallengeRequest {
   final CancelableOperation<ChessPlatformGame> operation;

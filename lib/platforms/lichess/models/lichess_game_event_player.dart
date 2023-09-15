@@ -1,4 +1,4 @@
-library chess_cloud_provider;
+library open_chess_platform_api;
 
 class GameEventPlayer {
   late final String id;

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:chess_cloud_provider/chess_platform_credentials.dart';
-import 'package:chess_cloud_provider/platforms/lichess/lichess.dart';
+import 'package:open_chess_platform_api/chess_platform_credentials.dart';
+import 'package:open_chess_platform_api/platforms/lichess/lichess.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 

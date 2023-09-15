@@ -1,8 +1,8 @@
-library chess_cloud_provider;
+library open_chess_platform_api;
 
-import 'package:chess_cloud_provider/chess_game_state.dart';
-import 'package:chess_cloud_provider/models/chess_color.dart';
-import 'package:chess_cloud_provider/models/game_time_type.dart';
+import 'package:open_chess_platform_api/chess_game_state.dart';
+import 'package:open_chess_platform_api/models/chess_color.dart';
+import 'package:open_chess_platform_api/models/game_time_type.dart';
 
 abstract class ChessPlatformGame {
   

@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:chess_cloud_provider/chess_game_state.dart';
-import 'package:chess_cloud_provider/chess_platform_game.dart';
-import 'package:chess_cloud_provider/exceptions/chess_platform_connection_error.dart';
-import 'package:chess_cloud_provider/exceptions/chess_platform_illegal_game_action.dart';
-import 'package:chess_cloud_provider/models/chess_game_connection_state.dart';
-import 'package:chess_cloud_provider/platforms/lichess/lichess.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event_opponent_gone.dart';
-import 'package:chess_cloud_provider/platforms/lichess/utils.dart';
+import 'package:open_chess_platform_api/chess_game_state.dart';
+import 'package:open_chess_platform_api/chess_platform_game.dart';
+import 'package:open_chess_platform_api/exceptions/chess_platform_connection_error.dart';
+import 'package:open_chess_platform_api/exceptions/chess_platform_illegal_game_action.dart';
+import 'package:open_chess_platform_api/models/chess_game_connection_state.dart';
+import 'package:open_chess_platform_api/platforms/lichess/lichess.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event_opponent_gone.dart';
+import 'package:open_chess_platform_api/platforms/lichess/utils.dart';
 
 class LichessGame extends ChessPlatformGame {
   final Lichess lichess;

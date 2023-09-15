@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:chess_cloud_provider/chess_platform_challenge.dart';
-import 'package:chess_cloud_provider/chess_platform_exception.dart';
-import 'package:chess_cloud_provider/chess_platform_game.dart';
-import 'package:chess_cloud_provider/chess_platform_user.dart';
-import 'package:chess_cloud_provider/models/chess_platform_auth_state.dart';
-import 'package:chess_cloud_provider/models/chess_platform_connection_state.dart';
+import 'package:open_chess_platform_api/chess_platform_challenge.dart';
+import 'package:open_chess_platform_api/chess_platform_exception.dart';
+import 'package:open_chess_platform_api/chess_platform_game.dart';
+import 'package:open_chess_platform_api/chess_platform_user.dart';
+import 'package:open_chess_platform_api/models/chess_platform_auth_state.dart';
+import 'package:open_chess_platform_api/models/chess_platform_connection_state.dart';
 
 class ChessPlatformState<U extends ChessPlatformUser,
     G extends ChessPlatformGame, C extends ChessPlatformChallenge> {

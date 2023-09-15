@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:chess_cloud_provider/models/game_status.dart';
-import 'package:chess_cloud_provider/platforms/lichess/lichess.dart';
+import 'package:open_chess_platform_api/models/game_status.dart';
+import 'package:open_chess_platform_api/platforms/lichess/lichess.dart';
 
 Future<T> retryAsync<T>(Future<T> Function() fn, { required int retries, required Duration retryDelay }) async {
     try {

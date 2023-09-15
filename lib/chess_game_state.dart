@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:chess_cloud_provider/chess_platform_exception.dart';
-import 'package:chess_cloud_provider/models/chat_message.dart';
-import 'package:chess_cloud_provider/models/chess_color.dart';
-import 'package:chess_cloud_provider/models/chess_game_connection_state.dart';
-import 'package:chess_cloud_provider/models/game_status.dart';
+import 'package:open_chess_platform_api/chess_platform_exception.dart';
+import 'package:open_chess_platform_api/models/chat_message.dart';
+import 'package:open_chess_platform_api/models/chess_color.dart';
+import 'package:open_chess_platform_api/models/chess_game_connection_state.dart';
+import 'package:open_chess_platform_api/models/game_status.dart';
 
 class ChessGameStateIntGetter {
   ChessGameStateInt Function()? get;

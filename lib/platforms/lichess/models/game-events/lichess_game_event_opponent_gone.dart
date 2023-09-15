@@ -1,6 +1,6 @@
-library chess_cloud_provider;
+library open_chess_platform_api;
 
-import 'package:chess_cloud_provider/platforms/lichess/models/game-events/lichess_game_event.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event.dart';
 
 // { "type": "opponentGone", "gone": true, "claimWinInSeconds": 8 }
 

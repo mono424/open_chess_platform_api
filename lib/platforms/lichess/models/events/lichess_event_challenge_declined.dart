@@ -1,7 +1,7 @@
-library chess_cloud_provider;
+library open_chess_platform_api;
 
-import 'package:chess_cloud_provider/platforms/lichess/models/events/lichess_event.dart';
-import 'package:chess_cloud_provider/platforms/lichess/models/lichess_challenge.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/events/lichess_event.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_challenge.dart';
 
 // {"type":"challengeDeclined","challenge":{"id":"9gevY8BQ","url":"https://lichess.org/9gevY8BQ","status":"declined","challenger":{"id":"mono425","name":"mono425","title":null,"rating":1500,"provisional":true,"online":true},"destUser":{"id":"mono424","name":"mono424","title":null,"rating":1500,"provisional":true,"online":true},"variant":{"key":"standard","name":"Standard","short":"Std"},"rated":false,"speed":"correspondence","timeControl":{"type":"unlimited"},"color":"random","finalColor":"black","perf":{"icon":"","name":"Correspondence"},"declineReason":"I'm not accepting challenges at the moment."}}
 

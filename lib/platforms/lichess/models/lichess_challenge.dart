@@ -15,7 +15,7 @@ class LichessChallenge extends ChessPlatformChallenge {
   late LichessVariant variant;
   late bool rated;
   late String speed;
-  late LichessTimeControl timeControl;
+  late LichessTimeControl? timeControl;
   late String color;
   late LichessPerf perf;
 
@@ -44,7 +44,7 @@ class LichessChallenge extends ChessPlatformChallenge {
       required this.variant,
       required this.rated,
       required this.speed,
-      required this.timeControl,
+      this.timeControl,
       required this.color,
       required this.perf});
 
@@ -57,7 +57,7 @@ class LichessChallenge extends ChessPlatformChallenge {
     variant = LichessVariant.fromJson(json['variant']);
     rated = json['rated'];
     speed = json['speed'];
-    timeControl = LichessTimeControl.fromJson(json['timeControl']);
+    timeControl = json['timeControl'] != null ? LichessTimeControl.fromJson(json['timeControl']) : null;
     color = json['color'];
     perf = LichessPerf.fromJson(json['perf']);
   }
@@ -72,7 +72,8 @@ class LichessChallenge extends ChessPlatformChallenge {
     data['variant'] = variant.toJson();
     data['rated'] = rated;
     data['speed'] = speed;
-    data['timeControl'] = timeControl.toJson();
+    final timeControl = this.timeControl;
+    if (timeControl != null) data['timeControl'] = timeControl.toJson();
     data['color'] = color;
     data['perf'] = perf.toJson();
     return data;

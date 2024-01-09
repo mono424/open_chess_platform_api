@@ -272,7 +272,7 @@ class Lichess extends ChessPlatform {
   Future<LichessChallengeResult> createNewChallenge(
     String userId, {
     bool rated = false,
-    required TimeOption time,
+    TimeOption? time,
     ChessColor color = ChessColor.random,
     int? retries,
     Duration? retryDelay,
@@ -281,7 +281,7 @@ class Lichess extends ChessPlatform {
     final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
 
     Map<String, dynamic> data = {"rated": rated, "color": color.text};
-    if (!time.isNoTime) {
+    if (time != null) {
       data["clock.limit"] = time.time.inSeconds;
       data["clock.increment"] = time.increment.inSeconds;
     }
@@ -502,12 +502,9 @@ class Lichess extends ChessPlatform {
     Map<String, dynamic> data = {
       "rated": rated,
       "color": color.text,
+      "time": time.time.inMinutes,
+      "increment": time.increment.inSeconds,
     };
-
-    if (!time.isNoTime) {
-      data["time"] = time.time.inMinutes;
-      data["increment"] = time.increment.inSeconds;
-    }
 
     if (ratingRange != null) {
       data["ratingRange"] = "${ratingRange.from}-${ratingRange.to}";
@@ -555,7 +552,7 @@ class Lichess extends ChessPlatform {
   Future<ChallengeRequest> createChallenge(
     String userId, {
     bool rated = false,
-    required TimeOption time,
+    TimeOption? time,
     ChessColor color = ChessColor.random,
   }) async {
 

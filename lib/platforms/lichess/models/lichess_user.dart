@@ -90,7 +90,7 @@ class LichessUser extends ChessPlatformUser {
     online = json['online'] ?? false;
     userRatings = LichessUserRatings.fromJson(json['perfs']);
     createdAt = json['createdAt'];
-    seenAt = json['seenAt'];
+    seenAt = json['seenAt'] ?? 0;
     playTime = LichessPlayTime.fromJson(json['playTime']);
     language = json['language'] ?? "";
     url = json['url'];

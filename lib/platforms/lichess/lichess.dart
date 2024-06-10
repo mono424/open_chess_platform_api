@@ -234,7 +234,7 @@ class Lichess extends ChessPlatform {
       final response = await request.close();
       final responseText = await getResponseText(response);
 
-      return jsonDecode(responseText)["result"].map((e) => LichessAutocompleteResult.fromJson(e)).toList();
+      return jsonDecode(responseText)["result"].map<LichessAutocompleteResult>((e) => LichessAutocompleteResult.fromJson(e)).toList();
     }, retries: retriesVal, retryDelay: retryDelayVal);
   }
 

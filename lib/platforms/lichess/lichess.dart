@@ -3,7 +3,6 @@ library open_chess_platform_api;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:async/async.dart';
 import 'package:open_chess_platform_api/exceptions/chess_platform_auth_in_progress.dart';

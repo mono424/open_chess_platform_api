@@ -14,9 +14,9 @@ class LichessTimeControl {
 
   LichessTimeControl.fromJson(Map<String, dynamic> json) {
     type = json['type'];
-    limit = json['limit'];
-    increment = json['increment'];
-    show = json['show'];
+    limit = json['limit'] ?? -1;
+    increment = json['increment'] ?? 0;
+    show = json['show'] ?? "";
   }
 
   Map<String, dynamic> toJson() {

@@ -3,6 +3,7 @@ library open_chess_platform_api;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:async/async.dart';
 import 'package:open_chess_platform_api/exceptions/chess_platform_auth_in_progress.dart';
@@ -15,6 +16,7 @@ import 'package:open_chess_platform_api/chess_platform_logger.dart';
 import 'package:open_chess_platform_api/models/chess_platform_auth_state.dart';
 import 'package:open_chess_platform_api/models/chess_platform_connection_state.dart';
 import 'package:open_chess_platform_api/platforms/lichess/game.dart';
+import 'package:open_chess_platform_api/platforms/lichess/models/lichess_autocomplete_result.dart';
 import 'package:open_chess_platform_api/platforms/lichess/utils.dart';
 import 'package:flutter/widgets.dart';
 import 'package:open_chess_platform_api/chess_platform_challenge.dart';
@@ -84,6 +86,7 @@ export 'package:open_chess_platform_api/platforms/lichess/models/game-events/lic
 export 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event_chat_line.dart';
 export 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event_game_full.dart';
 export 'package:open_chess_platform_api/platforms/lichess/models/game-events/lichess_game_event_game_state.dart';
+export 'package:open_chess_platform_api/platforms/lichess/models/lichess_autocomplete_result.dart';
 
 class Lichess extends ChessPlatform {
   final LichessOptions options;
@@ -218,6 +221,20 @@ class Lichess extends ChessPlatform {
       final response = await request.close();
       final responseJson = await parseResponseJSON(response);
       return LichessAccount.fromJson(responseJson);
+    }, retries: retriesVal, retryDelay: retryDelayVal);
+  }
+
+  Future<List<LichessAutocompleteResult>> autocompleteUsernames(String query, { int? retries, Duration? retryDelay }) async {
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
+
+    return retryAsync<List<LichessAutocompleteResult>>(() async {
+      final request = await createGetRequest("/api/player/autocomplete?object=true&friend=true&term=$query");
+      _logRequest(request);
+      final response = await request.close();
+      final responseText = await getResponseText(response);
+
+      return jsonDecode(responseText)["result"].map((e) => LichessAutocompleteResult.fromJson(e)).toList();
     }, retries: retriesVal, retryDelay: retryDelayVal);
   }
 

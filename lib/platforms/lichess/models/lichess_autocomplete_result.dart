@@ -17,8 +17,8 @@ class LichessAutocompleteResult {
 
   LichessAutocompleteResult.fromJson(Map<String, dynamic> json) {
     userId = (json['id'] != null && json['id'] is String) ? json['id'] : null;
-    name = json['name'];
-    title = json['title'];
+    name = json['name'] ?? userId;
+    title = json['title'] ?? "";
     online = json['patron'] ?? false;
     online = json['online'] ?? false;
   }

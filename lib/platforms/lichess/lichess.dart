@@ -221,6 +221,20 @@ class Lichess extends ChessPlatform {
     }, retries: retriesVal, retryDelay: retryDelayVal);
   }
 
+  Future<LichessUser> getPublicUserData(String username, { int? retries, Duration? retryDelay }) async {
+    final retriesVal = retries ?? options.defaultRetries;
+    final retryDelayVal = retryDelay ?? options.defaultRetryDelay;
+
+    return retryAsync<LichessUser>(() async {
+      final request = await createGetRequest("/api/user/$username");
+      _logRequest(request);
+      final response = await request.close();
+      final responseText = await getResponseText(response);
+
+      return LichessUser.parseJson(jsonDecode(responseText));
+    }, retries: retriesVal, retryDelay: retryDelayVal);
+  }
+
   Future<List<LichessUser>> getFollowing({ int? retries, Duration? retryDelay }) async {
     final retriesVal = retries ?? options.defaultRetries;
     final retryDelayVal = retryDelay ?? options.defaultRetryDelay;

@@ -8,7 +8,6 @@ class LichessAccount extends LichessUser {
   late bool followable;
   late bool following;
   late bool blocking;
-  late bool followsYou;
 
   LichessAccount(
       {required userId,
@@ -23,8 +22,7 @@ class LichessAccount extends LichessUser {
       required this.count,
       required this.followable,
       required this.following,
-      required this.blocking,
-      required this.followsYou})
+      required this.blocking})
       : super(
             userId: userId,
             username: username,
@@ -42,7 +40,6 @@ class LichessAccount extends LichessUser {
     followable = json['followable'];
     following = json['following'];
     blocking = json['blocking'];
-    followsYou = json['followsYou'];
   }
 
   @override
@@ -52,7 +49,6 @@ class LichessAccount extends LichessUser {
     data['followable'] = followable;
     data['following'] = following;
     data['blocking'] = blocking;
-    data['followsYou'] = followsYou;
     return data;
   }
 }
